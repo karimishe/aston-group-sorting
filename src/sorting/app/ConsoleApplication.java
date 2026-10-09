@@ -5,9 +5,11 @@ import java.io.PrintStream;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Comparator;
 import java.util.Objects;
 import sorting.collection.MyArrayList;
 import sorting.contract.DataSource;
+import sorting.contract.SortStrategy;
 import sorting.input.ConsoleInput;
 import sorting.model.Car;
 
@@ -16,6 +18,7 @@ public final class ConsoleApplication {
     private final PrintStream output;
     private final Modules modules;
     private MyArrayList<Car> cars;
+    private MyArrayList<Car> sortedCars;
 
     public ConsoleApplication(ConsoleInput input, PrintStream output, Modules modules) {
         this.input = Objects.requireNonNull(input, "Читатель консоли не должен быть null.");
@@ -34,13 +37,13 @@ public final class ConsoleApplication {
                     loadFromFile();
                     break;
                 case 2:
-                    output.println("Сортировка пока не реализована.");
+                    sortCars();
                     break;
                 case 3:
                     showCars();
                     break;
                 case 4:
-                    output.println("Результата сортировки пока нет.");
+                    showSortedCars();
                     break;
                 case 0:
                     output.println("Работа программы завершена.");
@@ -69,9 +72,28 @@ public final class ConsoleApplication {
             DataSource<Car> source = modules.fileSource(path);
             MyArrayList<Car> loadedCars = source.load(length);
             cars = loadedCars;
+            sortedCars = null;
             output.println("Загружено автомобилей: " + cars.size());
         } catch (IOException | IllegalArgumentException exception) {
             output.println("Не удалось загрузить файл: " + exception.getMessage());
+        }
+    }
+
+    private void sortCars() {
+        if (cars == null) {
+            output.println("Сначала загрузите автомобили для сортировки.");
+            return;
+        }
+
+        try {
+            MyArrayList<Car> result = cars.copy();
+            SortStrategy<Car> strategy = modules.sortStrategy();
+            Comparator<Car> comparator = modules.carComparator();
+            strategy.sort(result, comparator);
+            sortedCars = result;
+            output.println("Отсортировано автомобилей: " + sortedCars.size());
+        } catch (RuntimeException exception) {
+            output.println("Не удалось отсортировать автомобили: " + exception.getMessage());
         }
     }
 
@@ -80,9 +102,21 @@ public final class ConsoleApplication {
             output.println("Исходная коллекция пока не загружена.");
             return;
         }
-        output.println("Исходная коллекция (" + cars.size() + "):");
-        for (int i = 0; i < cars.size(); i++) {
-            Car car = cars.get(i);
+        printCars("Исходная коллекция", cars);
+    }
+
+    private void showSortedCars() {
+        if (sortedCars == null) {
+            output.println("Результата сортировки пока нет.");
+            return;
+        }
+        printCars("Результат сортировки", sortedCars);
+    }
+
+    private void printCars(String title, MyArrayList<Car> items) {
+        output.println(title + " (" + items.size() + "):");
+        for (int i = 0; i < items.size(); i++) {
+            Car car = items.get(i);
             output.println((i + 1) + ". " + car.getPower() + ";"
                     + car.getModel() + ";" + car.getProductionYear());
         }
