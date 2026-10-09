@@ -32,6 +32,8 @@ public class ConsoleApplicationTest {
         check(countLines(text, "Меню:") == 4, "После каждой команды можно выбрать следующую");
         check(countLines(text, "Сначала загрузите автомобили для сортировки.") == 1,
                 "Сортировка без данных предлагает сначала загрузить коллекцию");
+        check(!text.contains("Способ сравнения:"),
+                "До загрузки данных приложение не запрашивает способ сравнения");
         check(countLines(text, "Исходная коллекция пока не загружена.") == 1,
                 "До загрузки отсутствует исходная коллекция");
         check(countLines(text, "Результата сортировки пока нет.") == 1,
@@ -191,7 +193,7 @@ public class ConsoleApplicationTest {
             Files.write(replacement, "80;Honda;2018\n".getBytes(StandardCharsets.UTF_8));
             Files.write(invalid, "150;Kia;2020\n-1;Lada;2010\n".getBytes(StandardCharsets.UTF_8));
 
-            String text = run("1\n1\n" + cars + "\n6\n2\n1\n4\n3\n2\n1\n4\n0\n");
+            String text = run("1\n1\n" + cars + "\n6\n2\n1\n1\n4\n3\n2\n1\n1\n4\n0\n");
             check(countLines(text, "Отсортировано автомобилей: 6") == 2,
                     "Одну коллекцию можно сортировать повторно");
             check(countCollections(text, "Результат сортировки", sorted) == 2,
@@ -200,8 +202,8 @@ public class ConsoleApplicationTest {
                     "Сортировка не меняет исходный порядок автомобилей");
             check(countLines(text, "Меню:") == 7, "После сортировки и просмотра меню продолжает работать");
 
-            text = run("1\n1\n" + cars + "\n6\n2\n1\n1\n1\n" + replacement
-                    + "\n1\n4\n3\n2\n1\n4\n0\n");
+            text = run("1\n1\n" + cars + "\n6\n2\n1\n1\n1\n1\n" + replacement
+                    + "\n1\n4\n3\n2\n1\n1\n4\n0\n");
             check(countLines(text, "Результата сортировки пока нет.") == 1,
                     "Успешная загрузка новой коллекции сбрасывает предыдущий результат");
             check(countCollections(text, "Результат сортировки", sorted) == 0,
@@ -213,7 +215,7 @@ public class ConsoleApplicationTest {
             check(countCollections(text, "Результат сортировки", "80;Honda;2018") == 1,
                     "Коллекция из одного автомобиля успешно сортируется");
 
-            text = run("1\n1\n" + cars + "\n6\n2\n1\n"
+            text = run("1\n1\n" + cars + "\n6\n2\n1\n1\n"
                     + "1\n1\n" + invalid + "\n1\n3\n4\n"
                     + "1\n1\n" + directory.resolve("missing.txt") + "\n1\n3\n4\n"
                     + "1\n1\n" + replacement + "\n2\n3\n4\n0\n");
@@ -235,7 +237,7 @@ public class ConsoleApplicationTest {
             check(countLines(text, "Результата сортировки пока нет.") == 0,
                     "Ошибка загрузки не сбрасывает готовый результат");
 
-            text = run("1\n1\n" + cars + "\n6\n2\n1\n"
+            text = run("1\n1\n" + cars + "\n6\n2\n1\n1\n"
                     + "1\n2\n3\n4\n"
                     + "1\n3\n3\n4\n"
                     + "1\n0\n3\n4\n"
@@ -250,6 +252,42 @@ public class ConsoleApplicationTest {
                     "Неготовые пункты не выполняют повторную загрузку");
             check(countLines(text, "Отсортировано автомобилей: 6") == 1,
                     "Неготовые пункты не выполняют повторную сортировку");
+
+            text = run("1\n1\n" + cars + "\n6\n2\n1\n1\n"
+                    + "2\n1\n2\n3\n4\n"
+                    + "2\n1\n3\n3\n4\n"
+                    + "2\n1\n4\n3\n4\n"
+                    + "2\n1\n0\n3\n4\n0\n");
+            check(countLines(text, "1. По всем трём полям") == 5,
+                    "Сравнение по трём полям доступно в каждом меню сравнения");
+            check(countLines(text, "2. По мощности (не реализовано)") == 5,
+                    "Неготовое сравнение по мощности отмечено в меню");
+            check(countLines(text, "3. По модели (не реализовано)") == 5,
+                    "Неготовое сравнение по модели отмечено в меню");
+            check(countLines(text, "4. По году выпуска (не реализовано)") == 5,
+                    "Неготовое сравнение по году отмечено в меню");
+            check(countLines(text, "Этот способ сравнения пока не реализован.") == 3,
+                    "Каждый неготовый компаратор сопровождается сообщением");
+            check(countCollections(text, "Исходная коллекция", original) == 4,
+                    "Неготовые компараторы и отмена сохраняют исходную коллекцию");
+            check(countCollections(text, "Результат сортировки", sorted) == 4,
+                    "Неготовые компараторы и отмена сохраняют результат");
+            check(countLines(text, "Отсортировано автомобилей: 6") == 1,
+                    "Неготовый компаратор не заменяется сравнением по умолчанию");
+            check(countLines(text, "Работа программы завершена.") == 1,
+                    "Ноль в выборе компаратора возвращает в главное меню");
+
+            text = run("1\n1\n" + cars + "\n6\n2\n1\nтекст\n-1\n5\n1\n4\n0\n");
+            check(countLines(text, "Введите целое число.") == 1,
+                    "Выбор компаратора повторяется после нечислового ввода");
+            check(countLines(text, "Введите число от 0 до 4.") == 2,
+                    "Выбор компаратора проверяет обе границы");
+            check(countLines(text, "Способ сравнения:") == 1,
+                    "Ошибочный ввод повторяет запрос внутри меню сравнения");
+            check(countCollections(text, "Результат сортировки", sorted) == 1,
+                    "После ошибок выбора выполняется выбранная сортировка");
+            checkEndOfInput("1\n1\n" + cars + "\n6\n2\n1\n");
+            checkEndOfInput("1\n1\n" + cars + "\n6\n2\n1\nошибка\n");
         } finally {
             Files.deleteIfExists(invalid);
             Files.deleteIfExists(replacement);

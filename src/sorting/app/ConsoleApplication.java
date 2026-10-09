@@ -1,5 +1,6 @@
 package sorting.app;
 
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.file.InvalidPathException;
@@ -53,11 +54,13 @@ public final class ConsoleApplication {
     }
 
     private void chooseSource() throws IOException {
+        DataSource<Car> manualSource = modules.manualSource(input);
+        DataSource<Car> randomSource = modules.randomSource();
         output.println();
         output.println("Источник данных:");
         output.println("1. Из файла");
-        output.println("2. Вручную (не реализовано)");
-        output.println("3. Случайные данные (не реализовано)");
+        printOption(2, "Вручную", manualSource != null);
+        printOption(3, "Случайные данные", randomSource != null);
         output.println("0. Назад в главное меню");
 
         int choice = input.readInt("Выберите источник: ", 0, 3);
@@ -66,10 +69,18 @@ public final class ConsoleApplication {
                 loadFromFile();
                 return;
             case 2:
-                output.println("Ручной ввод пока не реализован.");
+                if (manualSource == null) {
+                    output.println("Ручной ввод пока не реализован.");
+                    return;
+                }
+                loadCars(manualSource, "Не удалось загрузить автомобили: ");
                 return;
             case 3:
-                output.println("Случайное заполнение пока не реализовано.");
+                if (randomSource == null) {
+                    output.println("Случайное заполнение пока не реализовано.");
+                    return;
+                }
+                loadCars(randomSource, "Не удалось загрузить автомобили: ");
                 return;
             case 0:
                 return;
@@ -77,27 +88,84 @@ public final class ConsoleApplication {
     }
 
     private void chooseAlgorithm() throws IOException {
+        SortStrategy<Car> insertionSort = modules.sortStrategy();
+        SortStrategy<Car> selectionSort = modules.selectionSort();
+        SortStrategy<Car> bubbleSort = modules.bubbleSort();
         output.println();
         output.println("Алгоритм сортировки:");
-        output.println("1. Вставками");
-        output.println("2. Выбором (не реализовано)");
-        output.println("3. Пузырьком (не реализовано)");
+        printOption(1, "Вставками", insertionSort != null);
+        printOption(2, "Выбором", selectionSort != null);
+        printOption(3, "Пузырьком", bubbleSort != null);
         output.println("0. Назад в главное меню");
 
         int choice = input.readInt("Выберите алгоритм: ", 0, 3);
         switch (choice) {
             case 1:
-                sortCars();
+                prepareSorting(insertionSort, "Сортировка вставками пока не реализована.");
                 return;
             case 2:
-                output.println("Сортировка выбором пока не реализована.");
+                prepareSorting(selectionSort, "Сортировка выбором пока не реализована.");
                 return;
             case 3:
-                output.println("Пузырьковая сортировка пока не реализована.");
+                prepareSorting(bubbleSort, "Пузырьковая сортировка пока не реализована.");
                 return;
             case 0:
                 return;
         }
+    }
+
+    private void prepareSorting(SortStrategy<Car> strategy, String unavailableMessage)
+            throws IOException {
+        if (strategy == null) {
+            output.println(unavailableMessage);
+            return;
+        }
+        if (cars == null) {
+            output.println("Сначала загрузите автомобили для сортировки.");
+            return;
+        }
+
+        Comparator<Car> comparator = chooseComparator();
+        if (comparator != null) {
+            sortCars(strategy, comparator);
+        }
+    }
+
+    private Comparator<Car> chooseComparator() throws IOException {
+        Comparator<Car> allFields = modules.carComparator();
+        Comparator<Car> power = modules.powerComparator();
+        Comparator<Car> model = modules.modelComparator();
+        Comparator<Car> productionYear = modules.productionYearComparator();
+        output.println();
+        output.println("Способ сравнения:");
+        printOption(1, "По всем трём полям", allFields != null);
+        printOption(2, "По мощности", power != null);
+        printOption(3, "По модели", model != null);
+        printOption(4, "По году выпуска", productionYear != null);
+        output.println("0. Назад в главное меню");
+
+        int choice = input.readInt("Выберите способ сравнения: ", 0, 4);
+        Comparator<Car> selected;
+        switch (choice) {
+            case 1:
+                selected = allFields;
+                break;
+            case 2:
+                selected = power;
+                break;
+            case 3:
+                selected = model;
+                break;
+            case 4:
+                selected = productionYear;
+                break;
+            default:
+                return null;
+        }
+        if (selected == null) {
+            output.println("Этот способ сравнения пока не реализован.");
+        }
+        return selected;
     }
 
     private void loadFromFile() throws IOException {
@@ -114,35 +182,36 @@ public final class ConsoleApplication {
             output.println("Некорректный путь к файлу.");
             return;
         }
-        int length = input.readInt("Количество автомобилей: ", 1, Integer.MAX_VALUE);
+        loadCars(modules.fileSource(path), "Не удалось загрузить файл: ");
+    }
 
+    private void loadCars(DataSource<Car> source, String errorMessage) throws IOException {
+        int length = input.readInt("Количество автомобилей: ", 1, Integer.MAX_VALUE);
         try {
-            DataSource<Car> source = modules.fileSource(path);
             MyArrayList<Car> loadedCars = source.load(length);
             cars = loadedCars;
             sortedCars = null;
             output.println("Загружено автомобилей: " + cars.size());
+        } catch (EOFException exception) {
+            throw exception;
         } catch (IOException | IllegalArgumentException exception) {
-            output.println("Не удалось загрузить файл: " + exception.getMessage());
+            output.println(errorMessage + exception.getMessage());
         }
     }
 
-    private void sortCars() {
-        if (cars == null) {
-            output.println("Сначала загрузите автомобили для сортировки.");
-            return;
-        }
-
+    private void sortCars(SortStrategy<Car> strategy, Comparator<Car> comparator) {
         try {
             MyArrayList<Car> result = cars.copy();
-            SortStrategy<Car> strategy = modules.sortStrategy();
-            Comparator<Car> comparator = modules.carComparator();
             strategy.sort(result, comparator);
             sortedCars = result;
             output.println("Отсортировано автомобилей: " + sortedCars.size());
         } catch (RuntimeException exception) {
             output.println("Не удалось отсортировать автомобили: " + exception.getMessage());
         }
+    }
+
+    private void printOption(int number, String title, boolean available) {
+        output.println(number + ". " + title + (available ? "" : " (не реализовано)"));
     }
 
     private void showCars() {
