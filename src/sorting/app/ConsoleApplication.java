@@ -34,10 +34,10 @@ public final class ConsoleApplication {
             int command = input.readInt("Ваш выбор: ", 0, 4);
             switch (command) {
                 case 1:
-                    loadFromFile();
+                    chooseSource();
                     break;
                 case 2:
-                    sortCars();
+                    chooseAlgorithm();
                     break;
                 case 3:
                     showCars();
@@ -49,6 +49,54 @@ public final class ConsoleApplication {
                     output.println("Работа программы завершена.");
                     return;
             }
+        }
+    }
+
+    private void chooseSource() throws IOException {
+        output.println();
+        output.println("Источник данных:");
+        output.println("1. Из файла");
+        output.println("2. Вручную (не реализовано)");
+        output.println("3. Случайные данные (не реализовано)");
+        output.println("0. Назад в главное меню");
+
+        int choice = input.readInt("Выберите источник: ", 0, 3);
+        switch (choice) {
+            case 1:
+                loadFromFile();
+                return;
+            case 2:
+                output.println("Ручной ввод пока не реализован.");
+                return;
+            case 3:
+                output.println("Случайное заполнение пока не реализовано.");
+                return;
+            case 0:
+                return;
+        }
+    }
+
+    private void chooseAlgorithm() throws IOException {
+        output.println();
+        output.println("Алгоритм сортировки:");
+        output.println("1. Вставками");
+        output.println("2. Выбором (не реализовано)");
+        output.println("3. Пузырьком (не реализовано)");
+        output.println("0. Назад в главное меню");
+
+        int choice = input.readInt("Выберите алгоритм: ", 0, 3);
+        switch (choice) {
+            case 1:
+                sortCars();
+                return;
+            case 2:
+                output.println("Сортировка выбором пока не реализована.");
+                return;
+            case 3:
+                output.println("Пузырьковая сортировка пока не реализована.");
+                return;
+            case 0:
+                return;
         }
     }
 
@@ -125,7 +173,7 @@ public final class ConsoleApplication {
     private void printMenu() {
         output.println();
         output.println("Меню:");
-        output.println("1. Загрузить автомобили из файла");
+        output.println("1. Загрузить автомобили");
         output.println("2. Отсортировать автомобили");
         output.println("3. Показать исходную коллекцию");
         output.println("4. Показать результат сортировки");
