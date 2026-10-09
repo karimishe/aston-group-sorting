@@ -9,7 +9,8 @@ public class Main {
     public static void main(String[] args) {
         ConsoleInput input = new ConsoleInput(
                 new InputStreamReader(System.in, StandardCharsets.UTF_8), System.out);
-        ConsoleApplication application = new ConsoleApplication(input, System.out);
+        Modules modules = new Modules();
+        ConsoleApplication application = new ConsoleApplication(input, System.out, modules);
         try {
             application.run();
         } catch (IOException exception) {
