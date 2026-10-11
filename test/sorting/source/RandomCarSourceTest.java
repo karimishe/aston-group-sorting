@@ -3,8 +3,6 @@ package sorting.source;
 import sorting.collection.MyArrayList;
 import sorting.model.Car;
 
-import java.util.Arrays;
-import java.util.List;
 import java.util.function.Supplier;
 
 public class RandomCarSourceTest {
@@ -15,10 +13,10 @@ public class RandomCarSourceTest {
                 "Ожидалось исключение IllegalArgumentException для отрицательного числа");
         check(RandomCarSourceTest::testWithLength0,
                 "Ожидалось исключение IllegalArgumentException для нуля");
-        check(RandomCarSourceTest::testWithLength5,
-                "Размер коллекции должен был составить 5 машин");
         check(RandomCarSourceTest::testWithLength256,
                 "Размер коллекции должен был составить 256 машин");
+        check(RandomCarSourceTest::testNotEqualLists,
+                "Генерируемые коллекции не могут быть одинаковыми всегда");
 
         System.out.println("Проверок пройдено: " + checks);
     }
@@ -55,10 +53,10 @@ public class RandomCarSourceTest {
         return false;
     }
 
-    private static boolean testWithLength5() {
+    private static boolean testWithLength256() {
         RandomCarSource generator = new RandomCarSource();
         try {
-            if (generator.load(5).size() == 5) {
+            if (generator.load(256).size() == 256) {
                 return true;
             }
         } catch (IllegalArgumentException e) {
@@ -67,10 +65,12 @@ public class RandomCarSourceTest {
         return false;
     }
 
-    private static boolean testWithLength256() {
+    private static boolean testNotEqualLists() {
         RandomCarSource generator = new RandomCarSource();
         try {
-            if (generator.load(256).size() == 256) {
+            MyArrayList<Car> cars1 = generator.load(1);
+            MyArrayList<Car> cars2 = generator.load(1);
+            if (!cars1.get(0).equals(cars2.get(0))) {
                 return true;
             }
         } catch (IllegalArgumentException e) {
