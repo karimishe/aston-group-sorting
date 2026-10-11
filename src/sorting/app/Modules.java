@@ -3,7 +3,9 @@ package sorting.app;
 import java.nio.file.Path;
 import java.util.Comparator;
 import sorting.algorithm.InsertionSort;
+import sorting.algorithm.SelectionSort;
 import sorting.compare.CarAllFieldsComparator;
+import sorting.compare.CarPowerComparator;
 import sorting.contract.DataSource;
 import sorting.contract.SortStrategy;
 import sorting.input.ConsoleInput;
@@ -32,7 +34,7 @@ public class Modules {
     }
 
     public SortStrategy<Car> selectionSort() {
-        return null;
+        return new SelectionSort<>();
     }
 
     public SortStrategy<Car> bubbleSort() {
@@ -44,7 +46,7 @@ public class Modules {
     }
 
     public Comparator<Car> powerComparator() {
-        return null;
+        return new CarPowerComparator();
     }
 
     public Comparator<Car> modelComparator() {
