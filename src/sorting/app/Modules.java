@@ -9,6 +9,7 @@ import sorting.contract.SortStrategy;
 import sorting.input.ConsoleInput;
 import sorting.model.Car;
 import sorting.source.FileCarSource;
+import sorting.source.ManualCarSource;
 
 /**
  * Создаёт модули приложения. null в необязательной фабрике означает,
@@ -20,7 +21,7 @@ public class Modules {
     }
 
     public DataSource<Car> manualSource(ConsoleInput input) {
-        return null;
+        return new ManualCarSource();
     }
 
     public DataSource<Car> randomSource() {
