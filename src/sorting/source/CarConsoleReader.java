@@ -42,7 +42,7 @@ public class CarConsoleReader {
             String year = scanner.nextLine().trim();
             try {
             parsedYear = Integer.parseInt(year);
-            if (1900 <= parsedYear || parsedYear <= currentYear){
+            if (1900 >= parsedYear || parsedYear >= currentYear){
                 System.out.println("Год выпуска должен быть от 1900 до " + currentYear);
             }
             } catch (NumberFormatException e) {

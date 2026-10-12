@@ -4,6 +4,7 @@ import java.nio.file.Path;
 import java.util.Comparator;
 import sorting.algorithm.InsertionSort;
 import sorting.compare.CarAllFieldsComparator;
+import sorting.compare.CarModelComparator;
 import sorting.contract.DataSource;
 import sorting.contract.SortStrategy;
 import sorting.input.ConsoleInput;
@@ -49,7 +50,7 @@ public class Modules {
     }
 
     public Comparator<Car> modelComparator() {
-        return null;
+        return new CarModelComparator();
     }
 
     public Comparator<Car> productionYearComparator() {
