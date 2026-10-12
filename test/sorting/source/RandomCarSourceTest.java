@@ -7,7 +7,10 @@ import org.junit.jupiter.params.provider.ValueSource;
 import sorting.collection.MyArrayList;
 import sorting.model.Car;
 
+import java.util.Arrays;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -37,24 +40,22 @@ class RandomCarSourceTest {
     }
 
     @Test
-    @DisplayName("Генерируемые коллекции не могут быть одинаковыми всегда")
-    void testNotEqualLists() {
+    @DisplayName("Все автомобили в коллекции содержат допустимые значения")
+    void testLoadReturnsValidCars() {
         RandomCarSource source = new RandomCarSource();
+        MyArrayList<Car> cars = source.load(256);
 
-        boolean foundDifference = false;
-        for (int i = 0; i < 10 && !foundDifference; i++) {
-            MyArrayList<Car> cars1 = source.load(1);
-            MyArrayList<Car> cars2 = source.load(1);
-
-            if (
-                    cars1.get(0).getPower() == cars2.get(0).getPower() &&
-                    cars1.get(0).getModel().equals(cars2.get(0).getModel()) &&
-                    cars1.get(0).getProductionYear() == cars2.get(0).getProductionYear()
-            ) {
-                foundDifference = true;
-            }
+        for (int i = 0; i < cars.size(); i++) {
+            Car car = cars.get(i);
+            assertNotNull(car, "В коллекции не должно быть null");
+            assertTrue(car.getPower() >= CarGenerator.POWER_MIN
+                    && car.getPower() <= CarGenerator.POWER_MAX,
+                    "Мощность вне допустимого диапазона: " + car.getPower());
+            assertTrue(Arrays.asList(CarGenerator.MODELS).contains(car.getModel()),
+                    "Недопустимая модель: " + car.getModel());
+            assertTrue(car.getProductionYear() >= CarGenerator.YEAR_MIN
+                    && car.getProductionYear() <= CarGenerator.YEAR_MAX,
+                    "Год выпуска вне допустимого диапазона: " + car.getProductionYear());
         }
-
-        assertTrue(!foundDifference, "Генерируемые коллекции не могут быть одинаковыми всегда");
     }
 }
