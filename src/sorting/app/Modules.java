@@ -5,12 +5,16 @@ import java.util.Comparator;
 import sorting.algorithm.InsertionSort;
 import sorting.compare.CarAllFieldsComparator;
 import sorting.compare.CarModelComparator;
+import sorting.compare.CarProductionYearComparator;
 import sorting.contract.DataSource;
+import sorting.contract.OccurrenceCounter;
 import sorting.contract.SortStrategy;
 import sorting.input.ConsoleInput;
 import sorting.model.Car;
+import sorting.source.CarCounter;
 import sorting.source.FileCarSource;
 import sorting.source.ManualCarSource;
+import sorting.source.RandomCarSource;
 
 /**
  * Создаёт модули приложения. null в необязательной фабрике означает,
@@ -26,7 +30,7 @@ public class Modules {
     }
 
     public DataSource<Car> randomSource() {
-        return null;
+        return new RandomCarSource();
     }
 
     public SortStrategy<Car> sortStrategy() {
@@ -54,6 +58,10 @@ public class Modules {
     }
 
     public Comparator<Car> productionYearComparator() {
-        return null;
+        return new CarProductionYearComparator();
+    }
+
+    public OccurrenceCounter<Car> carCounter() {
+        return new CarCounter();
     }
 }
