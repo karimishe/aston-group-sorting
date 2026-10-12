@@ -2,6 +2,8 @@ package sorting.app;
 
 import java.nio.file.Path;
 import java.util.Comparator;
+
+import sorting.algorithm.BubbleSort;
 import sorting.algorithm.InsertionSort;
 import sorting.compare.CarAllFieldsComparator;
 import sorting.contract.DataSource;
@@ -36,7 +38,7 @@ public class Modules {
     }
 
     public SortStrategy<Car> bubbleSort() {
-        return null;
+        return new BubbleSort<>();
     }
 
     public Comparator<Car> carComparator() {
