@@ -1,36 +1,60 @@
 package sorting.compare;
 
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 import sorting.model.Car;
 
-import java.util.function.Supplier;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class CarProductionYearComparatorTest {
-    private static int checks;
-    private static final CarProductionYearComparator comparator = new CarProductionYearComparator();
+class CarProductionYearComparatorTest {
 
-    public static void main(String[] args) {
-        check(CarProductionYearComparatorTest::testLt,
-                "При сравнении получилось, что 2007 не идет до 2018");
-        check(CarProductionYearComparatorTest::testEq,
-                "При сравнении получилось, что 2018 не равен 2018");
-        check(CarProductionYearComparatorTest::testGt,
-                "При сравнении получилось, что 2025 не идет после 2018");
-        check(CarProductionYearComparatorTest::testNullFirst,
-                "Ожидалось исключение NullPointerException, т.к. первый элемент передан как null");
-        check(CarProductionYearComparatorTest::testNullSecond,
-                "Ожидалось исключение NullPointerException, т.к. второй элемент передан как null");
-        check(CarProductionYearComparatorTest::testNullTwo,
-                "Ожидалось исключение NullPointerException, т.к. оба элемента переданы как null");
+    private static final CarProductionYearComparator COMPARATOR = new CarProductionYearComparator();
 
-        System.out.println("Проверок пройдено: " + checks);
+    @Test
+    @DisplayName("2007 идёт до 2018")
+    void testLt() {
+        int result = COMPARATOR.compare(makeCar(2007), makeCar(2018));
+        assertTrue(result < 0, "При сравнении получилось, что 2007 не идет до 2018");
     }
 
-    private static void check(Supplier<Boolean> condition, String errorMessage) {
-        if (condition.get()) {
-            checks++;
-        } else {
-            throw new AssertionError(errorMessage);
-        }
+    @Test
+    @DisplayName("2018 равен 2018")
+    void testEq() {
+        int result = COMPARATOR.compare(makeCar(2018), makeCar(2018));
+        assertEquals(0, result, "При сравнении получилось, что 2018 не равен 2018");
+    }
+
+    @Test
+    @DisplayName("2025 идёт после 2018")
+    void testGt() {
+        int result = COMPARATOR.compare(makeCar(2025), makeCar(2018));
+        assertTrue(result > 0, "При сравнении получилось, что 2025 не идет после 2018");
+    }
+
+    @Test
+    @DisplayName("NullPointerException, если первый элемент null")
+    void testNullFirst() {
+        assertThrows(NullPointerException.class,
+                () -> COMPARATOR.compare(null, makeCar(2018)),
+                "Ожидалось исключение NullPointerException, т.к. первый элемент передан как null");
+    }
+
+    @Test
+    @DisplayName("NullPointerException, если второй элемент null")
+    void testNullSecond() {
+        assertThrows(NullPointerException.class,
+                () -> COMPARATOR.compare(makeCar(2018), null),
+                "Ожидалось исключение NullPointerException, т.к. второй элемент передан как null");
+    }
+
+    @Test
+    @DisplayName("NullPointerException, если оба элемента null")
+    void testNullTwo() {
+        assertThrows(NullPointerException.class,
+                () -> COMPARATOR.compare(null, null),
+                "Ожидалось исключение NullPointerException, т.к. оба элемента переданы как null");
     }
 
     private static Car makeCar(int year) {
@@ -39,47 +63,5 @@ public class CarProductionYearComparatorTest {
                 .model("Car")
                 .productionYear(year)
                 .build();
-    }
-
-    private static boolean testLt() {
-        int result = comparator.compare(makeCar(2007), makeCar(2018));
-        return result < 0;
-    }
-
-    private static boolean testEq() {
-        int result = comparator.compare(makeCar(2018), makeCar(2018));
-        return result == 0;
-    }
-
-    private static boolean testGt() {
-        int result = comparator.compare(makeCar(2025), makeCar(2018));
-        return result > 0;
-    }
-
-    private static boolean testNullFirst() {
-        try {
-            comparator.compare(null, makeCar(2018));
-        } catch (NullPointerException e) {
-            return true;
-        }
-        return false;
-    }
-
-    private static boolean testNullSecond() {
-        try {
-            comparator.compare(makeCar(2018), null);
-        } catch (NullPointerException e) {
-            return true;
-        }
-        return false;
-    }
-
-    private static boolean testNullTwo() {
-        try {
-            comparator.compare(null, null);
-        } catch (NullPointerException e) {
-            return true;
-        }
-        return false;
     }
 }

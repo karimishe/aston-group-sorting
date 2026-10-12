@@ -1,117 +1,93 @@
 package sorting.source;
 
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import sorting.collection.MyArrayList;
 import sorting.model.Car;
 
-public class CarCounterTest {
-    private static int checks;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.fail;
 
-    public static void main(String[] args) {
-        CarCounter counter = new CarCounter();
-        MyArrayList<Car> cars = new MyArrayList<>();
+class CarCounterTest {
+    // сколько машин каждого типа будет находиться в своем списке
+    private static final int CARS1_COUNT = 7;
+    private static final int CARS2_COUNT = 15;
+    private static final int CARS3_COUNT = 1;
+    private static final int CARS4_COUNT = 10;
+    private static final int CARS5_COUNT = 0;
 
-        // кол-во одинаковых автомобилей
-        int cars1 = 7;
-        int cars2 = 15;
-        int cars3 = 1;
-        int cars4 = 10;
-        int cars5 = 0;
+    private CarCounter counter;
+    private MyArrayList<Car> cars;
 
-        for (int i = 0; i < cars1; i++) {
+    private Car car1;
+    private Car car2;
+    private Car car3;
+    private Car car4;
+    private Car car5;
+
+    @BeforeEach
+    void setUp() {
+        counter = new CarCounter();
+        cars = new MyArrayList<>();
+
+        for (int i = 0; i < CARS1_COUNT; i++) {
             cars.add(makeCar1());
         }
-        for (int i = 0; i < cars2; i++) {
+        for (int i = 0; i < CARS2_COUNT; i++) {
             cars.add(makeCar2());
         }
-        for (int i = 0; i < cars3; i++) {
+        for (int i = 0; i < CARS3_COUNT; i++) {
             cars.add(makeCar3());
         }
-        for (int i = 0; i < cars4; i++) {
+        for (int i = 0; i < CARS4_COUNT; i++) {
             cars.add(makeCar4());
         }
 
-        Car car1 = makeCar1();
-        Car car2 = makeCar2();
-        Car car3 = makeCar3();
-        Car car4 = makeCar4();
-        Car car5 = makeCar5();
+        car1 = makeCar1();
+        car2 = makeCar2();
+        car3 = makeCar3();
+        car4 = makeCar4();
+        car5 = makeCar5();
+    }
 
-        // проверки на корректность подсчетов
-        try {
-            check(counter.count(cars, car1, 1) == cars1, "Неверный подсчёт. потоков: 1, авто: 1");
-            check(counter.count(cars, car2, 1) == cars2, "Неверный подсчёт. потоков: 1, авто: 2");
-            check(counter.count(cars, car3, 1) == cars3, "Неверный подсчёт. потоков: 1, авто: 3");
-            check(counter.count(cars, car4, 1) == cars4, "Неверный подсчёт. потоков: 1, авто: 4");
-            check(counter.count(cars, car5, 1) == cars5, "Неверный подсчёт. потоков: 1, авто: 5");
+    @ParameterizedTest(name = "потоков: {0}")
+    @ValueSource(ints = {1, 2, 3, 4, 7})
+    @DisplayName("Корректный подсчёт при разном количестве потоков")
+    void testCount(int threadCount) throws InterruptedException {
+        assertEquals(CARS1_COUNT, counter.count(cars, car1, threadCount), message(threadCount, 1));
+        assertEquals(CARS2_COUNT, counter.count(cars, car2, threadCount), message(threadCount, 2));
+        assertEquals(CARS3_COUNT, counter.count(cars, car3, threadCount), message(threadCount, 3));
+        assertEquals(CARS4_COUNT, counter.count(cars, car4, threadCount), message(threadCount, 4));
+        assertEquals(CARS5_COUNT, counter.count(cars, car5, threadCount), message(threadCount, 5));
+    }
 
-            check(counter.count(cars, car1, 2) == cars1, "Неверный подсчёт. потоков: 2, авто: 1");
-            check(counter.count(cars, car2, 2) == cars2, "Неверный подсчёт. потоков: 2, авто: 2");
-            check(counter.count(cars, car3, 2) == cars3, "Неверный подсчёт. потоков: 2, авто: 3");
-            check(counter.count(cars, car4, 2) == cars4, "Неверный подсчёт. потоков: 2, авто: 4");
-            check(counter.count(cars, car5, 2) == cars5, "Неверный подсчёт. потоков: 2, авто: 5");
+    @ParameterizedTest(name = "потоков: {0}")
+    @ValueSource(ints = {0, -1, -100})
+    @DisplayName("IllegalArgumentException при недопустимом количестве потоков")
+    void testInvalidThreadCount(int threadCount) {
+        assertThrows(IllegalArgumentException.class, () -> counter.count(cars, car1, threadCount));
+    }
 
-            check(counter.count(cars, car1, 3) == cars1, "Неверный подсчёт. потоков: 3, авто: 1");
-            check(counter.count(cars, car2, 3) == cars2, "Неверный подсчёт. потоков: 3, авто: 2");
-            check(counter.count(cars, car3, 3) == cars3, "Неверный подсчёт. потоков: 3, авто: 3");
-            check(counter.count(cars, car4, 3) == cars4, "Неверный подсчёт. потоков: 3, авто: 4");
-            check(counter.count(cars, car5, 3) == cars5, "Неверный подсчёт. потоков: 3, авто: 5");
-
-            check(counter.count(cars, car1, 4) == cars1, "Неверный подсчёт. потоков: 4, авто: 1");
-            check(counter.count(cars, car2, 4) == cars2, "Неверный подсчёт. потоков: 4, авто: 2");
-            check(counter.count(cars, car3, 4) == cars3, "Неверный подсчёт. потоков: 4, авто: 3");
-            check(counter.count(cars, car4, 4) == cars4, "Неверный подсчёт. потоков: 4, авто: 4");
-            check(counter.count(cars, car5, 4) == cars5, "Неверный подсчёт. потоков: 4, авто: 5");
-
-            check(counter.count(cars, car1, 7) == cars1, "Неверный подсчёт. потоков: 7, авто: 1");
-            check(counter.count(cars, car2, 7) == cars2, "Неверный подсчёт. потоков: 7, авто: 2");
-            check(counter.count(cars, car3, 7) == cars3, "Неверный подсчёт. потоков: 7, авто: 3");
-            check(counter.count(cars, car4, 7) == cars4, "Неверный подсчёт. потоков: 7, авто: 4");
-            check(counter.count(cars, car5, 7) == cars5, "Неверный подсчёт. потоков: 7, авто: 5");
-
-        } catch (InterruptedException e) {
-            throw new AssertionError(e);
-        }
-
-        // проверка на нулевое кол-во потоков
-        try {
-            counter.count(cars, car1, 0);
-            throw new AssertionError("Ожидалось IllegalArgumentException для кол-ва потоков = 0");
-        } catch (IllegalArgumentException e) {
-            checks++;
-        } catch (InterruptedException e) {
-            throw new AssertionError(e);
-        }
-
-        // проверка на отрицательное кол-во потоков
-        try {
-            counter.count(cars, car1, -1);
-            throw new AssertionError("Ожидалось IllegalArgumentException для кол-ва потоков = -1");
-        } catch (IllegalArgumentException e) {
-            checks++;
-        } catch (InterruptedException e) {
-            throw new AssertionError(e);
-        }
-
-        // проверка на прерывание потоков
+    @Test
+    @DisplayName("InterruptedException при прерывании потока")
+    void testInterruptedException() {
         Thread.currentThread().interrupt();
         try {
             counter.count(cars, car1, 1);
-            throw new AssertionError("Ожидалось InterruptedException");
-        } catch (InterruptedException e) {
-            checks++;
+            fail("Ожидалось InterruptedException");
+        } catch (InterruptedException expected) {
+            // тест пройден
         } finally {
             Thread.interrupted();
         }
-
-        System.out.println("Проверок пройдено: " + checks);
     }
 
-    private static void check(boolean success, String errorMessage) {
-        if (success) {
-            checks++;
-        } else {
-            throw new AssertionError(errorMessage);
-        }
+    private static String message(int threadCount, int carIndex) {
+        return "Неверный подсчёт. потоков: " + threadCount + ", авто: " + carIndex;
     }
 
     private static Car makeCar1() {
