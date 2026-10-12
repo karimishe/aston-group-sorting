@@ -1,47 +1,54 @@
 package sorting.source;
 
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.RepeatedTest;
 import sorting.model.Car;
 
 import java.util.Arrays;
-import java.util.function.Supplier;
 
-public class CarGeneratorTest {
-    private static int checks;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-    public static void main(String[] args) {
-        check(CarGeneratorTest::testAllowedModels,
-                "В генераторе не подразумевалась модель, которая в итоге была прописана");
-        check(CarGeneratorTest::testAllowedPower,
-                "Разрешенная мощность от " + CarGenerator.POWER_MIN + " до " + CarGenerator.POWER_MAX);
-        check(CarGeneratorTest::testAllowedYear,
-                "Год возможен от " + CarGenerator.YEAR_MIN + " до " + CarGenerator.YEAR_MAX);
+class CarGeneratorTest {
 
-        System.out.println("Проверок пройдено: " + checks);
+    private CarGenerator generator;
+
+    @BeforeEach
+    void setUp() {
+        generator = new CarGenerator();
     }
 
-    private static void check(Supplier<Boolean> condition, String errorMessage) {
-        if (condition.get()) {
-            checks++;
-        } else {
-            throw new AssertionError(errorMessage);
-        }
-    }
-
-    private static boolean testAllowedModels() {
-        CarGenerator generator = new CarGenerator();
+    @RepeatedTest(value = 10, name = "Проверка моделей ({currentRepetition}/{totalRepetitions})")
+    @DisplayName("Сгенерированная модель должна быть из списка разрешённых")
+    void testAllowedModels() {
         Car car = generator.get();
-        return Arrays.asList(CarGenerator.MODELS).contains(car.getModel());
+        assertTrue(
+                Arrays.asList(CarGenerator.MODELS).contains(car.getModel()),
+                "В генераторе не подразумевалась модель, которая в итоге была прописана: " + car.getModel()
+        );
     }
 
-    private static boolean testAllowedPower() {
-        CarGenerator generator = new CarGenerator();
+    @RepeatedTest(value = 10, name = "Проверка мощности ({currentRepetition}/{totalRepetitions})")
+    @DisplayName("Мощность должна быть в разрешённом диапазоне")
+    void testAllowedPower() {
         Car car = generator.get();
-        return CarGenerator.POWER_MIN <= car.getPower() && CarGenerator.POWER_MAX >= car.getPower();
+        boolean inRange = CarGenerator.POWER_MIN <= car.getPower() && car.getPower() <= CarGenerator.POWER_MAX;
+        assertTrue(
+                inRange,
+                "Разрешенная мощность от " + CarGenerator.POWER_MIN + " до " + CarGenerator.POWER_MAX
+                + ", получено: " + car.getPower()
+        );
     }
 
-    private static boolean testAllowedYear() {
-        CarGenerator generator = new CarGenerator();
+    @RepeatedTest(value = 10, name = "Проверка года ({currentRepetition}/{totalRepetitions})")
+    @DisplayName("Год выпуска должен быть в разрешённом диапазоне")
+    void testAllowedYear() {
         Car car = generator.get();
-        return CarGenerator.YEAR_MIN <= car.getProductionYear() && CarGenerator.YEAR_MAX >= car.getProductionYear();
+        boolean inRange = CarGenerator.YEAR_MIN <= car.getProductionYear() && car.getProductionYear() <= CarGenerator.YEAR_MAX;
+        assertTrue(
+                inRange,
+                "Год возможен от " + CarGenerator.YEAR_MIN + " до " + CarGenerator.YEAR_MAX
+                + ", получено: " + car.getProductionYear()
+        );
     }
 }
