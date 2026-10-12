@@ -4,6 +4,7 @@ import java.nio.file.Path;
 import java.util.Comparator;
 import sorting.algorithm.InsertionSort;
 import sorting.compare.CarAllFieldsComparator;
+import sorting.compare.CarModelComparator;
 import sorting.compare.CarProductionYearComparator;
 import sorting.contract.DataSource;
 import sorting.contract.OccurrenceCounter;
@@ -12,6 +13,7 @@ import sorting.input.ConsoleInput;
 import sorting.model.Car;
 import sorting.source.CarCounter;
 import sorting.source.FileCarSource;
+import sorting.source.ManualCarSource;
 import sorting.source.RandomCarSource;
 
 /**
@@ -24,7 +26,7 @@ public class Modules {
     }
 
     public DataSource<Car> manualSource(ConsoleInput input) {
-        return null;
+        return new ManualCarSource(input);
     }
 
     public DataSource<Car> randomSource() {
@@ -52,7 +54,7 @@ public class Modules {
     }
 
     public Comparator<Car> modelComparator() {
-        return null;
+        return new CarModelComparator();
     }
 
     public Comparator<Car> productionYearComparator() {
