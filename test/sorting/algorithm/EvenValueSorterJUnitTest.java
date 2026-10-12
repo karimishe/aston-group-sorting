@@ -7,8 +7,12 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import sorting.collection.MyArrayList;
+import sorting.contract.SortStrategy;
 import sorting.model.Car;
 
 class EvenValueSorterJUnitTest {
@@ -79,13 +83,16 @@ class EvenValueSorterJUnitTest {
         assertSame(car4, cars.get(3));
     }
 
-    @Test
-    void worksWithBubbleSortToo() {
-        MyArrayList<Integer> list = numbers(8, 3, 2, 5, 4);
+    @ParameterizedTest
+    @MethodSource("strategies")
+    void handlesNegativeValuesZeroDuplicatesAndOddPositions(SortStrategy<Integer> strategy) {
+        MyArrayList<Integer> list = numbers(-3, 8, Integer.MAX_VALUE, 0, -4, -1,
+                2, -4, Integer.MIN_VALUE, Integer.MAX_VALUE - 1, 5);
 
-        new EvenValueSorter<Integer>().sort(list, Integer::intValue, new BubbleSort<>());
+        new EvenValueSorter<Integer>().sort(list, Integer::intValue, strategy);
 
-        assertEquals(Arrays.asList(2, 3, 4, 5, 8), toList(list));
+        assertEquals(Arrays.asList(-3, Integer.MIN_VALUE, Integer.MAX_VALUE, -4, -4, -1,
+                0, 2, 8, Integer.MAX_VALUE - 1, 5), toList(list));
     }
 
     @Test
@@ -107,6 +114,10 @@ class EvenValueSorterJUnitTest {
             list.add(value);
         }
         return list;
+    }
+
+    private static Stream<SortStrategy<Integer>> strategies() {
+        return Stream.of(new InsertionSort<>(), new SelectionSort<>(), new BubbleSort<>());
     }
 
     private static List<Integer> toList(MyArrayList<Integer> list) {
