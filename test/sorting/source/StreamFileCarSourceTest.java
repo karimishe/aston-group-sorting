@@ -86,4 +86,39 @@ class StreamFileCarSourceTest {
 
         assertThrows(IOException.class, () -> new StreamFileCarSource(file).load(1));
     }
+
+    @Test
+    void acceptsCyrillicCrLfAndMissingFinalLineBreak() throws IOException {
+        Path file = directory.resolve("cars.txt");
+        String content = "150;Лада Веста;2020\r\n100;Ford;2000";
+        Files.writeString(file, content);
+
+        MyArrayList<Car> cars = new StreamFileCarSource(file).load(2);
+
+        assertEquals(2, cars.size());
+        assertEquals("Лада Веста", cars.get(0).getModel());
+        assertEquals("Ford", cars.get(1).getModel());
+        assertEquals(content, Files.readString(file));
+    }
+
+    @Test
+    void rejectsEmptyFile() throws IOException {
+        Path file = directory.resolve("empty.txt");
+        Files.writeString(file, "");
+
+        assertThrows(IllegalArgumentException.class, () -> new StreamFileCarSource(file).load(1));
+    }
+
+    @Test
+    void reportsEmptyAndWhitespaceOnlyLinesAfterRequestedPrefix() throws IOException {
+        Path file = directory.resolve("cars.txt");
+        for (String blank : new String[] {"", "   "}) {
+            Files.writeString(file, "150;Kia;2020\n" + blank + "\n100;Ford;2000\n");
+
+            IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                    () -> new StreamFileCarSource(file).load(1));
+
+            assertTrue(exception.getMessage().startsWith("Строка 2:"));
+        }
+    }
 }

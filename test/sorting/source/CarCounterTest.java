@@ -73,6 +73,28 @@ class CarCounterTest {
     }
 
     @Test
+    void emptyCollectionHasNoMatches() throws InterruptedException {
+        assertEquals(0, counter.count(new MyArrayList<>(), car1, 3));
+    }
+
+    @Test
+    void countsWhenThereAreMoreThreadsThanElements() throws InterruptedException {
+        MyArrayList<Car> small = new MyArrayList<>();
+        small.add(makeCar1());
+        small.add(makeCar2());
+        small.add(makeCar1());
+
+        assertEquals(2, counter.count(small, car1, 5));
+        assertEquals(0, counter.count(small, car5, 5));
+    }
+
+    @Test
+    void rejectsNullCollectionAndTarget() {
+        assertThrows(IllegalArgumentException.class, () -> counter.count(null, car1, 2));
+        assertThrows(IllegalArgumentException.class, () -> counter.count(cars, null, 2));
+    }
+
+    @Test
     @DisplayName("InterruptedException при прерывании потока")
     void testInterruptedException() {
         Thread.currentThread().interrupt();

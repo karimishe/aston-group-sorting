@@ -1,81 +1,104 @@
 package sorting.collection;
 
-public class MyArrayListTest {
-    private static int checks;
+import org.junit.jupiter.api.Test;
 
-    public static void main(String[] args) {
-        checkBasicOperations();
-        checkInvalidArguments();
-        checkGrowth();
-        checkCopy();
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-        System.out.println("Проверок пройдено: " + checks);
+class MyArrayListTest {
+    @Test
+    void newCollectionIsEmpty() {
+        MyArrayList<String> values = new MyArrayList<>();
+        assertEquals(0, values.size());
+        assertTrue(values.isEmpty());
     }
 
-    private static void checkBasicOperations() {
+    @Test
+    void addPreservesOrderAndDuplicates() {
         MyArrayList<String> values = new MyArrayList<>();
-        check(values.size() == 0, "Новая коллекция имеет размер 0");
-        check(values.isEmpty(), "Новая коллекция пуста");
-
         values.add("Ford");
         values.add("Kia");
         values.add("Ford");
-        check(values.size() == 3, "Каждое добавление увеличивает размер, включая повторения");
-        check(!values.isEmpty(), "После добавления коллекция не пуста");
-        check("Ford".equals(values.get(0)) && "Kia".equals(values.get(1))
-                && "Ford".equals(values.get(2)), "Сохраняются значения и порядок добавления");
-        check(values.size() == 3, "Чтение элементов не меняет размер");
+
+        assertEquals(3, values.size());
+        assertFalse(values.isEmpty());
+        assertEquals("Ford", values.get(0));
+        assertEquals("Kia", values.get(1));
+        assertEquals("Ford", values.get(2));
+        assertEquals(3, values.size(), "Чтение не меняет размер коллекции");
+    }
+
+    @Test
+    void setPreservesNeighboursAndSize() {
+        MyArrayList<String> values = new MyArrayList<>();
+        values.add("Ford");
+        values.add("Kia");
+        values.add("Ford");
 
         values.set(0, "Volvo");
         values.set(2, "Toyota");
-        check("Volvo".equals(values.get(0)) && "Kia".equals(values.get(1))
-                && "Toyota".equals(values.get(2)), "Замена первого и последнего элементов сохраняет соседей");
-        check(values.size() == 3, "Замена элементов не меняет размер");
+
+        assertEquals("Volvo", values.get(0));
+        assertEquals("Kia", values.get(1));
+        assertEquals("Toyota", values.get(2));
+        assertEquals(3, values.size());
     }
 
-    private static void checkInvalidArguments() {
+    @Test
+    void invalidOperationsPreserveEmptyCollection() {
         MyArrayList<String> values = new MyArrayList<>();
-        expectIndexError(() -> values.get(0), "Чтение из пустой коллекции");
-        expectIndexError(() -> values.set(0, "Ford"), "Замена в пустой коллекции");
-        expectNullError(() -> values.add(null), "Добавление null в пустую коллекцию");
-        check(values.isEmpty() && values.size() == 0, "Ошибки не изменяют пустую коллекцию");
 
+        assertThrows(IndexOutOfBoundsException.class, () -> values.get(0));
+        assertThrows(IndexOutOfBoundsException.class, () -> values.set(0, "Ford"));
+        assertThrows(NullPointerException.class, () -> values.add(null));
+
+        assertTrue(values.isEmpty());
+        assertEquals(0, values.size());
+    }
+
+    @Test
+    void invalidOperationsPreserveExistingElements() {
+        MyArrayList<String> values = new MyArrayList<>();
         values.add("Ford");
         values.add("Kia");
-        expectIndexError(() -> values.get(-1), "Отрицательный индекс чтения");
-        expectIndexError(() -> values.get(values.size()), "Чтение по индексу, равному размеру");
-        expectIndexError(() -> values.get(Integer.MAX_VALUE), "Слишком большой индекс чтения");
-        expectIndexError(() -> values.set(-1, "Volvo"), "Отрицательный индекс замены");
-        expectIndexError(() -> values.set(values.size(), "Volvo"), "Замена по индексу, равному размеру");
-        expectIndexError(() -> values.set(Integer.MAX_VALUE, "Volvo"), "Слишком большой индекс замены");
-        expectNullError(() -> values.add(null), "Добавление null в непустую коллекцию");
-        expectNullError(() -> values.set(0, null), "Замена элемента на null");
-        check(values.size() == 2 && !values.isEmpty(), "После ошибок сохраняется размер коллекции");
-        check("Ford".equals(values.get(0)) && "Kia".equals(values.get(1)),
-                "После ошибок сохраняются элементы и их порядок");
+
+        for (int index : new int[] {-1, values.size(), Integer.MAX_VALUE}) {
+            assertThrows(IndexOutOfBoundsException.class, () -> values.get(index));
+            assertThrows(IndexOutOfBoundsException.class, () -> values.set(index, "Volvo"));
+        }
+        assertThrows(NullPointerException.class, () -> values.add(null));
+        assertThrows(NullPointerException.class, () -> values.set(0, null));
+
+        assertEquals(2, values.size());
+        assertFalse(values.isEmpty());
+        assertEquals("Ford", values.get(0));
+        assertEquals("Kia", values.get(1));
     }
 
-    private static void checkGrowth() {
+    @Test
+    void growingCollectionPreservesAllElements() {
         MyArrayList<Integer> numbers = new MyArrayList<>();
         for (int i = 0; i < 40; i++) {
             numbers.add(i);
         }
-        check(numbers.size() == 40, "Добавлены все 40 элементов");
 
-        boolean correctOrder = true;
+        assertEquals(40, numbers.size());
         for (int i = 0; i < numbers.size(); i++) {
-            if (!Integer.valueOf(i).equals(numbers.get(i))) {
-                correctOrder = false;
-                break;
-            }
+            assertEquals(i, numbers.get(i).intValue(), "Элемент с индексом " + i);
         }
-        check(correctOrder, "При расширении сохраняются все элементы и их порядок");
+
         numbers.set(39, 100);
-        check(numbers.get(39) == 100 && numbers.get(38) == 38 && numbers.size() == 40,
-                "После расширения последний элемент можно заменить без изменения размера");
+        assertEquals(100, numbers.get(39).intValue());
+        assertEquals(38, numbers.get(38).intValue());
+        assertEquals(40, numbers.size());
     }
 
-    private static void checkCopy() {
+    @Test
+    void copyHasIndependentStorageAndSameElements() {
         Object first = new Object();
         Object second = new Object();
         MyArrayList<Object> original = new MyArrayList<>();
@@ -83,60 +106,105 @@ public class MyArrayListTest {
         original.add(second);
 
         MyArrayList<Object> copy = original.copy();
-        check(copy != original, "Копия является отдельной коллекцией");
-        check(copy.size() == 2 && !copy.isEmpty(), "Копия сохраняет размер исходной коллекции");
-        check(copy.get(0) == first && copy.get(1) == second,
-                "Копируются ссылки на те же элементы с сохранением порядка");
+        assertNotSame(original, copy);
+        assertEquals(2, copy.size());
+        assertFalse(copy.isEmpty());
+        assertSame(first, copy.get(0));
+        assertSame(second, copy.get(1));
 
         Object replacement = new Object();
         copy.set(0, replacement);
-        check(original.get(0) == first && copy.get(0) == replacement,
-                "Замена элемента в копии не меняет оригинал");
+        assertSame(first, original.get(0));
+        assertSame(replacement, copy.get(0));
         original.set(1, replacement);
-        check(copy.get(1) == second && original.get(1) == replacement,
-                "Замена элемента в оригинале не меняет копию");
+        assertSame(second, copy.get(1));
+        assertSame(replacement, original.get(1));
 
         copy.add(second);
-        check(copy.size() == 3 && original.size() == 2 && copy.get(2) == second,
-                "Добавление в копию не меняет оригинал");
+        assertEquals(3, copy.size());
+        assertEquals(2, original.size());
+        assertSame(second, copy.get(2));
         original.add(first);
-        check(original.size() == 3 && copy.size() == 3
-                && original.get(2) == first && copy.get(2) == second,
-                "Добавление в оригинал не меняет копию");
+        assertEquals(3, original.size());
+        assertEquals(3, copy.size());
+        assertSame(first, original.get(2));
+        assertSame(second, copy.get(2));
+    }
 
+    @Test
+    void copyOfEmptyCollectionCanBeChangedIndependently() {
+        MyArrayList<String> original = new MyArrayList<>();
+        MyArrayList<String> copy = original.copy();
+
+        assertNotSame(original, copy);
+        assertTrue(copy.isEmpty());
+        assertEquals(0, copy.size());
+        copy.add("Ford");
+        assertTrue(original.isEmpty());
+        assertEquals(1, copy.size());
+        assertEquals("Ford", copy.get(0));
+    }
+
+    @Test
+    void addAllAppendsElementsWithoutChangingSource() {
+        MyArrayList<String> target = new MyArrayList<>();
+        target.add("Ford");
+        MyArrayList<String> source = new MyArrayList<>();
+        source.add("Kia");
+        source.add("Ford");
+
+        target.addAll(source);
+
+        assertEquals(3, target.size());
+        assertEquals("Ford", target.get(0));
+        assertEquals("Kia", target.get(1));
+        assertEquals("Ford", target.get(2));
+        assertEquals(2, source.size());
+        assertEquals("Kia", source.get(0));
+        assertEquals("Ford", source.get(1));
+
+        target.set(1, "Volvo");
+        assertEquals("Kia", source.get(0));
+    }
+
+    @Test
+    void addAllToItselfCopiesOriginalElementsOnce() {
+        MyArrayList<Integer> values = new MyArrayList<>();
+        for (int i = 0; i < 8; i++) {
+            values.add(i);
+        }
+
+        values.addAll(values);
+
+        assertEquals(16, values.size());
+        for (int i = 0; i < 8; i++) {
+            assertEquals(i, values.get(i).intValue());
+            assertEquals(i, values.get(i + 8).intValue());
+        }
+    }
+
+    @Test
+    void addAllWithEmptyCollectionPreservesElements() {
+        MyArrayList<String> values = new MyArrayList<>();
+        values.add("Ford");
         MyArrayList<String> empty = new MyArrayList<>();
-        MyArrayList<String> emptyCopy = empty.copy();
-        check(emptyCopy != empty && emptyCopy.isEmpty() && emptyCopy.size() == 0,
-                "Копия пустой коллекции тоже пуста и является отдельным объектом");
-        emptyCopy.add("Ford");
-        check(empty.isEmpty() && emptyCopy.size() == 1 && "Ford".equals(emptyCopy.get(0)),
-                "В копию пустой коллекции можно добавлять элементы независимо от оригинала");
+
+        values.addAll(empty);
+        empty.addAll(empty);
+
+        assertEquals(1, values.size());
+        assertEquals("Ford", values.get(0));
+        assertTrue(empty.isEmpty());
     }
 
-    private static void check(boolean condition, String description) {
-        if (!condition) {
-            throw new AssertionError(description);
-        }
-        checks++;
-    }
+    @Test
+    void addAllRejectsNullWithoutChangingCollection() {
+        MyArrayList<String> values = new MyArrayList<>();
+        values.add("Ford");
 
-    private static void expectIndexError(Runnable action, String description) {
-        try {
-            action.run();
-        } catch (IndexOutOfBoundsException exception) {
-            checks++;
-            return;
-        }
-        throw new AssertionError("Ожидалась ошибка индекса: " + description);
-    }
+        assertThrows(NullPointerException.class, () -> values.addAll(null));
 
-    private static void expectNullError(Runnable action, String description) {
-        try {
-            action.run();
-        } catch (NullPointerException exception) {
-            checks++;
-            return;
-        }
-        throw new AssertionError("Ожидалась ошибка null: " + description);
+        assertEquals(1, values.size());
+        assertEquals("Ford", values.get(0));
     }
 }

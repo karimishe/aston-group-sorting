@@ -108,7 +108,7 @@ examples/cars-sort.txt
 
 Новые тесты пишем на JUnit 5: методы помечаем `@Test`, результат проверяем через `Assertions`, имена классов заканчиваем на `Test`. Пример — [CarAllFieldsComparatorTest](test/sorting/compare/CarAllFieldsComparatorTest.java). Maven найдёт такие тесты автоматически.
 
-Существующие проверки с `main` подключены через [CoreRegressionTest](test/sorting/CoreRegressionTest.java): его JUnit-тесты вызывают эти методы. Поэтому общая команда выполняет и старые, и новые проверки. Каждый сохранённый `main` можно по-прежнему запустить отдельно.
+Все тестовые классы используют JUnit 5 и входят в общий запуск Maven. Для запуска одного класса можно указать его имя: `./mvnw -Dtest=SelectionSortTest test`.
 
 В IDEA тесты запускаются кнопкой рядом с JUnit-классом или методом; весь набор — через Maven, цель `test`. Отчёты Maven сохраняются в `target/surefire-reports`. Файловые тесты создают временные файлы и удаляют их после выполнения.
 

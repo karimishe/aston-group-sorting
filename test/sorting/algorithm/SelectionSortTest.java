@@ -1,64 +1,87 @@
 package sorting.algorithm;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
 import java.util.Comparator;
+import org.junit.jupiter.api.Test;
 import sorting.collection.MyArrayList;
 import sorting.compare.CarAllFieldsComparator;
 import sorting.contract.SortStrategy;
 import sorting.model.Car;
 
 public class SelectionSortTest {
-    private static int checks;
-
-    public static void main(String[] args) {
-        checkIntegerCases();
-        checkOtherComparators();
-        checkCarsAndCopy();
-        checkNullArguments();
-
-        System.out.println("Проверок пройдено: " + checks);
+    @Test
+    void keepsEmptyCollection() {
+        assertSorted(new int[] {}, new int[] {});
     }
 
-    private static void checkIntegerCases() {
-        sortAndCheck(new int[] {}, new int[] {}, "Пустая коллекция");
-        sortAndCheck(new int[] {7}, new int[] {7}, "Один элемент");
-        sortAndCheck(new int[] {1, 2, 3, 4}, new int[] {1, 2, 3, 4},
-                "Уже отсортированная коллекция");
-        sortAndCheck(new int[] {4, 3, 2, 1}, new int[] {1, 2, 3, 4},
-                "Обратный порядок");
-        sortAndCheck(new int[] {3, -1, 0, 3, -1, 2}, new int[] {-1, -1, 0, 2, 3, 3},
-                "Смешанные значения с повторениями");
-        sortAndCheck(new int[] {5, 5, 5}, new int[] {5, 5, 5}, "Все значения одинаковые");
-        sortAndCheck(new int[] {0, Integer.MAX_VALUE, Integer.MIN_VALUE},
-                new int[] {Integer.MIN_VALUE, 0, Integer.MAX_VALUE}, "Границы int");
-        sortAndCheck(new int[] {12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1},
-                new int[] {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12},
-                "Коллекция больше начальной вместимости");
+    @Test
+    void keepsSingleElement() {
+        assertSorted(new int[] {7}, new int[] {7});
     }
 
-    private static void sortAndCheck(int[] initial, int[] expected, String description) {
-        MyArrayList<Integer> values = numbers(initial);
-        SortStrategy<Integer> strategy = new SelectionSort<>();
-        strategy.sort(values, Integer::compare);
-        checkNumbers(values, expected, description);
+    @Test
+    void keepsAlreadySortedValues() {
+        assertSorted(new int[] {1, 2, 3, 4}, new int[] {1, 2, 3, 4});
     }
 
-    private static void checkOtherComparators() {
+    @Test
+    void sortsReverseOrder() {
+        assertSorted(new int[] {4, 3, 2, 1}, new int[] {1, 2, 3, 4});
+    }
+
+    @Test
+    void sortsNegativeValuesAndKeepsDuplicates() {
+        assertSorted(new int[] {3, -1, 0, 3, -1, 2}, new int[] {-1, -1, 0, 2, 3, 3});
+    }
+
+    @Test
+    void keepsEqualValues() {
+        assertSorted(new int[] {5, 5, 5}, new int[] {5, 5, 5});
+    }
+
+    @Test
+    void sortsIntegerBoundaries() {
+        assertSorted(new int[] {0, Integer.MAX_VALUE, Integer.MIN_VALUE},
+                new int[] {Integer.MIN_VALUE, 0, Integer.MAX_VALUE});
+    }
+
+    @Test
+    void sortsCollectionLargerThanInitialCapacity() {
+        assertSorted(new int[] {12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1},
+                new int[] {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12});
+    }
+
+    @Test
+    void usesDescendingComparator() {
         MyArrayList<Integer> values = numbers(1, 3, 2, 3, -1);
         Comparator<Integer> descending = (first, second) -> Integer.compare(second, first);
-        new SelectionSort<Integer>().sort(values, descending);
-        checkNumbers(values, new int[] {3, 3, 2, 1, -1}, "Компаратор задаёт обратный порядок");
 
+        new SelectionSort<Integer>().sort(values, descending);
+
+        assertNumbers(values, 3, 3, 2, 1, -1);
+    }
+
+    @Test
+    void sortsStringsWithTheirComparator() {
         MyArrayList<String> words = new MyArrayList<>();
         words.add("Volvo");
         words.add("Audi");
         words.add("Kia");
+
         new SelectionSort<String>().sort(words, String::compareTo);
-        check(words.size() == 3 && "Audi".equals(words.get(0))
-                        && "Kia".equals(words.get(1)) && "Volvo".equals(words.get(2)),
-                "Тот же алгоритм сортирует строки с помощью другого компаратора");
+
+        assertEquals(3, words.size());
+        assertEquals("Audi", words.get(0));
+        assertEquals("Kia", words.get(1));
+        assertEquals("Volvo", words.get(2));
     }
 
-    private static void checkCarsAndCopy() {
+    @Test
+    void sortsCarsByAllFieldsAndPreservesReferencesAndOriginal() {
         Car lowerPower = car(100, "Volvo", 2022);
         Car higherPower = car(200, "Audi", 1900);
         Car earlierModel = car(150, "Audi", 2022);
@@ -70,15 +93,15 @@ public class SelectionSortTest {
         for (Car car : initial) {
             original.add(car);
         }
-
         MyArrayList<Car> result = original.copy();
+
         new SelectionSort<Car>().sort(result, new CarAllFieldsComparator());
 
-        check(result.size() == initial.length, "Сортировка сохраняет размер коллекции");
-        check(result.get(0) == lowerPower && result.get(6) == higherPower,
-                "Мощность имеет приоритет перед моделью и годом");
-        check(result.get(1) == earlierModel, "При одинаковой мощности решает модель");
-        check(result.get(5) == newer, "При одинаковой мощности и модели решает год");
+        assertEquals(initial.length, result.size(), "Сортировка сохраняет размер коллекции");
+        assertSame(lowerPower, result.get(0), "Сначала сравнивается мощность");
+        assertSame(earlierModel, result.get(1), "При одинаковой мощности решает модель");
+        assertSame(newer, result.get(5), "При одинаковой мощности и модели решает год");
+        assertSame(higherPower, result.get(6), "Максимальная мощность идёт последней");
 
         int olderReferences = 0;
         int sameFieldsReferences = 0;
@@ -90,29 +113,65 @@ public class SelectionSortTest {
                 sameFieldsReferences++;
             }
         }
-        check(olderReferences == 2 && sameFieldsReferences == 1,
-                "Сохраняются обе повторные ссылки и отдельный объект с такими же полями");
-
-        boolean originalUnchanged = original.size() == initial.length;
+        assertEquals(2, olderReferences, "Сохраняются обе ссылки на один объект");
+        assertEquals(1, sameFieldsReferences, "Сохраняется отдельный объект с такими же полями");
+        assertEquals(initial.length, original.size());
         for (int i = 0; i < initial.length; i++) {
-            if (original.get(i) != initial[i]) {
-                originalUnchanged = false;
-            }
+            assertSame(initial[i], original.get(i), "Исходная позиция " + i + " не изменилась");
         }
-        check(originalUnchanged, "Сортировка копии сохраняет исходную коллекцию и её порядок");
     }
 
-    private static void checkNullArguments() {
+    @Test
+    void rejectsNullCollection() {
         SortStrategy<Integer> strategy = new SelectionSort<>();
-        expectNull(() -> strategy.sort(null, Integer::compare), "Коллекция null");
-        expectNull(() -> strategy.sort(null, null), "Оба аргумента null");
-        expectNull(() -> strategy.sort(new MyArrayList<>(), null),
-                "Компаратор null для пустой коллекции");
-        expectNull(() -> strategy.sort(numbers(1), null),
-                "Компаратор null для одного элемента");
+
+        assertThrows(NullPointerException.class, () -> strategy.sort(null, Integer::compare));
+    }
+
+    @Test
+    void rejectsBothNullArguments() {
+        SortStrategy<Integer> strategy = new SelectionSort<>();
+
+        assertThrows(NullPointerException.class, () -> strategy.sort(null, null));
+    }
+
+    @Test
+    void rejectsNullComparatorForEmptyCollection() {
+        SortStrategy<Integer> strategy = new SelectionSort<>();
+
+        assertThrows(NullPointerException.class, () -> strategy.sort(new MyArrayList<>(), null));
+    }
+
+    @Test
+    void rejectsNullComparatorForSingleElement() {
+        SortStrategy<Integer> strategy = new SelectionSort<>();
+
+        assertThrows(NullPointerException.class, () -> strategy.sort(numbers(1), null));
+    }
+
+    @Test
+    void rejectsNullComparatorWithoutChangingCollection() {
         MyArrayList<Integer> values = numbers(2, 1);
-        expectNull(() -> strategy.sort(values, null), "Компаратор null для двух элементов");
-        checkNumbers(values, new int[] {2, 1}, "Ошибка аргумента не меняет коллекцию");
+        SortStrategy<Integer> strategy = new SelectionSort<>();
+
+        assertThrows(NullPointerException.class, () -> strategy.sort(values, null));
+        assertNumbers(values, 2, 1);
+    }
+
+    private static void assertSorted(int[] initial, int[] expected) {
+        MyArrayList<Integer> values = numbers(initial);
+
+        new SelectionSort<Integer>().sort(values, Integer::compare);
+
+        assertNumbers(values, expected);
+    }
+
+    private static void assertNumbers(MyArrayList<Integer> values, int... expected) {
+        int[] actual = new int[values.size()];
+        for (int i = 0; i < values.size(); i++) {
+            actual[i] = values.get(i);
+        }
+        assertArrayEquals(expected, actual);
     }
 
     private static MyArrayList<Integer> numbers(int... initial) {
@@ -123,39 +182,11 @@ public class SelectionSortTest {
         return values;
     }
 
-    private static void checkNumbers(MyArrayList<Integer> values, int[] expected,
-                                     String description) {
-        check(values.size() == expected.length, description + ": размер");
-        for (int i = 0; i < expected.length; i++) {
-            if (values.get(i) != expected[i]) {
-                throw new AssertionError(description + ": неверное значение на позиции " + i);
-            }
-        }
-        check(true, description + ": порядок и значения");
-    }
-
     private static Car car(int power, String model, int productionYear) {
         return new Car.Builder()
                 .power(power)
                 .model(model)
                 .productionYear(productionYear)
                 .build();
-    }
-
-    private static void check(boolean condition, String description) {
-        if (!condition) {
-            throw new AssertionError(description);
-        }
-        checks++;
-    }
-
-    private static void expectNull(Runnable action, String description) {
-        try {
-            action.run();
-        } catch (NullPointerException exception) {
-            checks++;
-            return;
-        }
-        throw new AssertionError("Ожидался NullPointerException: " + description);
     }
 }
