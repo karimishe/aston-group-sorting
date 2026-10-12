@@ -22,7 +22,7 @@ public class Modules {
     }
 
     public DataSource<Car> manualSource(ConsoleInput input) {
-        return new ManualCarSource();
+        return new ManualCarSource(input);
     }
 
     public DataSource<Car> randomSource() {

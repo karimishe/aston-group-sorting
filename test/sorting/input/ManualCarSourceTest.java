@@ -9,7 +9,6 @@ import java.io.ByteArrayInputStream;
 import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 import java.io.*;
-import java.util.Scanner;
 
 public class ManualCarSourceTest {
 
@@ -19,7 +18,7 @@ public class ManualCarSourceTest {
         String input = "150\nToyota Camry\n2020\n";
         ByteArrayInputStream bais = new ByteArrayInputStream(input.getBytes());
         ManualCarSource source = new ManualCarSource(
-                new Scanner(new ByteArrayInputStream("150\nToyota Camry\n2020\n".getBytes())));
+                new ConsoleInput(new StringReader("150\nToyota Camry\n2020\n"), System.out));
 
         MyArrayList<Car> cars;
         try {
@@ -40,7 +39,7 @@ public class ManualCarSourceTest {
         String input = "BMW X5\n300\n2021\nAudi A4\n200\n2019\nвыход\n";
         ByteArrayInputStream bais = new ByteArrayInputStream(input.getBytes());
         ManualCarSource source = new ManualCarSource(
-                new Scanner(new ByteArrayInputStream("300\nBMW X5\n2021\n200\nAudi A4\n2019\n".getBytes())));
+                new ConsoleInput(new StringReader("300\nBMW X5\n2021\n200\nAudi A4\n2019\n"), System.out));
 
         MyArrayList<Car> cars;
         try {
@@ -64,7 +63,7 @@ public class ManualCarSourceTest {
         String input = "abc\n120\nHonda Civic\n2018\n";
         ByteArrayInputStream bais = new ByteArrayInputStream(input.getBytes());
         ManualCarSource source = new ManualCarSource(
-                new Scanner(new ByteArrayInputStream("abc\n120\nHonda Civic\n2018\n".getBytes())));
+                new ConsoleInput(new StringReader("abc\n120\nHonda Civic\n2018\n"), System.out));
 
         MyArrayList<Car> cars;
         try {
@@ -84,7 +83,7 @@ public class ManualCarSourceTest {
         String input = "100\nFord Focus\nxyz\n2015\n";
         ByteArrayInputStream bais = new ByteArrayInputStream(input.getBytes());
         ManualCarSource source = new ManualCarSource(
-                new Scanner(new ByteArrayInputStream("100\nFord Focus\nxyz\n2015\n".getBytes())));
+                new ConsoleInput(new StringReader("100\nFord Focus\nxyz\n2015\n"), System.out));
 
         MyArrayList<Car> cars;
         try {
@@ -104,7 +103,7 @@ public class ManualCarSourceTest {
         String input = "140\n\nMazda 3\n2017\n";
         ByteArrayInputStream bais = new ByteArrayInputStream(input.getBytes());
         ManualCarSource source = new ManualCarSource(
-                new Scanner(new ByteArrayInputStream("140\n\n\nMazda 3\n2017\n".getBytes())));
+                new ConsoleInput(new StringReader("140\n\n\nMazda 3\n2017\n"), System.out));
 
         MyArrayList<Car> cars;
         try {
@@ -125,7 +124,7 @@ public class ManualCarSourceTest {
         String input = "-50\n150\nNissan Altima\nabc\n2020\n";
         ByteArrayInputStream bais = new ByteArrayInputStream(input.getBytes());
         ManualCarSource source = new ManualCarSource(
-                new Scanner(new ByteArrayInputStream("-50\n150\nNissan Altima\nabc\n2020\n".getBytes())));
+                new ConsoleInput(new StringReader("-50\n150\nNissan Altima\nabc\n2020\n"), System.out));
 
         MyArrayList<Car> cars;
         try {

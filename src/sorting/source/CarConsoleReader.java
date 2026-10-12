@@ -1,60 +1,31 @@
 package sorting.source;
 
-import sorting.model.Car;
 import java.io.IOException;
-import java.util.Scanner;
 import java.time.LocalDate;
+import java.util.Objects;
+import sorting.input.ConsoleInput;
+import sorting.model.Car;
 
 public class CarConsoleReader {
-    private Scanner scanner;
-    public CarConsoleReader(){
-    this.scanner = new Scanner(System.in);
-}
-    public CarConsoleReader(Scanner scanner){
-    this.scanner = scanner;
+    private final ConsoleInput input;
+
+    public CarConsoleReader(ConsoleInput input) {
+        this.input = Objects.requireNonNull(input, "Читатель консоли не должен быть null.");
     }
+
     public Car readCar() throws IOException {
-        int parsedPower = 0;
-        while (parsedPower <= 0) {
-            System.out.println("Введите мощность: ");
-            String power = scanner.nextLine().trim();
-            try {
-                parsedPower = Integer.parseInt(power);
-                if (parsedPower <= 0) {
-                    System.out.println("Мощность должна быть положительной");
-                }
-            } catch (NumberFormatException e) {
-                System.out.println("Мощность должна быть числом");
-            }
+        int power = input.readInt("Введите мощность: ", 1, Integer.MAX_VALUE);
+        String model = input.readLine("Введите модель: ").trim();
+        while (model.isEmpty() || model.indexOf(';') >= 0) {
+            model = input.readLine("Модель должна быть непустой и не содержать ';'. "
+                    + "Введите модель: ").trim();
         }
-        String model = "";
-        while (model == "") {
-            System.out.println("Введите модель: ");
-                model = scanner.nextLine().trim();
-                if (model == "") {
-                    System.out.println("Строка пустая или содержит только пробелы");
-                }
-        }
-        int parsedYear = 0;
-        int currentYear = LocalDate.now().getYear();
-        while (1900 >= parsedYear || parsedYear >= currentYear) {
-            System.out.println("Введите год выпуска: ");
-            String year = scanner.nextLine().trim();
-            try {
-            parsedYear = Integer.parseInt(year);
-            if (1900 >= parsedYear || parsedYear >= currentYear){
-                System.out.println("Год выпуска должен быть от 1900 до " + currentYear);
-            }
-            } catch (NumberFormatException e) {
-                System.out.println("Пожалуйста, введите целое число");
-            }
-        }
-        Car car = new Car.Builder()
-                .power(parsedPower)
+        int year = input.readInt("Введите год выпуска: ", 1900, LocalDate.now().getYear());
+
+        return new Car.Builder()
+                .power(power)
                 .model(model)
-                .productionYear(parsedYear)
+                .productionYear(year)
                 .build();
-        System.out.println("Автомобиль добавлен");
-    return car;
-}
+    }
 }
