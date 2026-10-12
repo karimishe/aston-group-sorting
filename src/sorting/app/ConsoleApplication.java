@@ -12,6 +12,7 @@ import java.util.Objects;
 
 import sorting.collection.MyArrayList;
 import sorting.contract.DataSource;
+import sorting.contract.EvenSorter;
 import sorting.contract.OccurrenceCounter;
 import sorting.contract.ResultWriter;
 import sorting.contract.SortStrategy;
@@ -35,14 +36,15 @@ public final class ConsoleApplication {
         output.println("Приложение сортировки автомобилей");
 
         while (true) {
-            printMenu();
-            int command = input.readInt("Ваш выбор: ", 0, 6);
+            EvenSorter<Car> evenSorter = modules.evenSorter();
+            printMenu(evenSorter != null);
+            int command = input.readInt("Ваш выбор: ", 0, 7);
             switch (command) {
                 case 1:
                     chooseSource();
                     break;
                 case 2:
-                    chooseAlgorithm();
+                    chooseAlgorithm(null);
                     break;
                 case 3:
                     showCars();
@@ -55,6 +57,13 @@ public final class ConsoleApplication {
                     break;
                 case 6:
                     writeCars();
+                    break;
+                case 7:
+                    if (evenSorter == null) {
+                        output.println("Сортировка чётных значений пока не реализована.");
+                    } else {
+                        chooseAlgorithm(evenSorter);
+                    }
                     break;
                 case 0:
                     output.println("Работа программы завершена.");
@@ -97,7 +106,7 @@ public final class ConsoleApplication {
         }
     }
 
-    private void chooseAlgorithm() throws IOException {
+    private void chooseAlgorithm(EvenSorter<Car> evenSorter) throws IOException {
         SortStrategy<Car> insertionSort = modules.sortStrategy();
         SortStrategy<Car> selectionSort = modules.selectionSort();
         SortStrategy<Car> bubbleSort = modules.bubbleSort();
@@ -111,20 +120,21 @@ public final class ConsoleApplication {
         int choice = input.readInt("Выберите алгоритм: ", 0, 3);
         switch (choice) {
             case 1:
-                prepareSorting(insertionSort, "Сортировка вставками пока не реализована.");
+                prepareSorting(insertionSort, "Сортировка вставками пока не реализована.", evenSorter);
                 return;
             case 2:
-                prepareSorting(selectionSort, "Сортировка выбором пока не реализована.");
+                prepareSorting(selectionSort, "Сортировка выбором пока не реализована.", evenSorter);
                 return;
             case 3:
-                prepareSorting(bubbleSort, "Пузырьковая сортировка пока не реализована.");
+                prepareSorting(bubbleSort, "Пузырьковая сортировка пока не реализована.", evenSorter);
                 return;
             case 0:
                 return;
         }
     }
 
-    private void prepareSorting(SortStrategy<Car> strategy, String unavailableMessage)
+    private void prepareSorting(SortStrategy<Car> strategy, String unavailableMessage,
+            EvenSorter<Car> evenSorter)
             throws IOException {
         if (strategy == null) {
             output.println(unavailableMessage);
@@ -132,6 +142,10 @@ public final class ConsoleApplication {
         }
         if (cars == null) {
             output.println("Сначала загрузите автомобили для сортировки.");
+            return;
+        }
+        if (evenSorter != null) {
+            sortEvenCars(evenSorter, strategy);
             return;
         }
 
@@ -224,6 +238,19 @@ public final class ConsoleApplication {
         output.println(number + ". " + title + (available ? "" : " (не реализовано)"));
     }
 
+    private void sortEvenCars(EvenSorter<Car> sorter, SortStrategy<Car> strategy) {
+        try {
+            MyArrayList<Car> result = cars.copy();
+            sorter.sort(result, Car::getPower, strategy);
+            sortedCars = result;
+            output.println("Отсортировано автомобилей: " + sortedCars.size());
+            output.println("Чётные значения мощности расположены по возрастанию. "
+                    + "Автомобили с нечётной мощностью остались на своих местах.");
+        } catch (RuntimeException exception) {
+            output.println("Не удалось отсортировать автомобили: " + exception.getMessage());
+        }
+    }
+
     private void showCars() {
         if (cars == null) {
             output.println("Исходная коллекция пока не загружена.");
@@ -309,7 +336,7 @@ public final class ConsoleApplication {
         }
     }
 
-    private void printMenu() {
+    private void printMenu(boolean evenSorterAvailable) {
         output.println();
         output.println("Меню:");
         output.println("1. Загрузить автомобили");
@@ -318,6 +345,7 @@ public final class ConsoleApplication {
         output.println("4. Показать результат сортировки");
         output.println("5. Подсчитать автомобили");
         output.println("6. Выгрузить результат сортировки в файл");
+        printOption(7, "Отсортировать автомобили с чётной мощностью", evenSorterAvailable);
         output.println("0. Выход");
     }
 }

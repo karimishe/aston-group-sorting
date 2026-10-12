@@ -4,6 +4,7 @@ import java.nio.file.Path;
 import java.util.Comparator;
 
 import sorting.algorithm.BubbleSort;
+import sorting.algorithm.EvenValueSorter;
 import sorting.algorithm.InsertionSort;
 import sorting.algorithm.SelectionSort;
 import sorting.compare.CarAllFieldsComparator;
@@ -11,6 +12,7 @@ import sorting.compare.CarModelComparator;
 import sorting.compare.CarPowerComparator;
 import sorting.compare.CarProductionYearComparator;
 import sorting.contract.DataSource;
+import sorting.contract.EvenSorter;
 import sorting.contract.OccurrenceCounter;
 import sorting.contract.ResultWriter;
 import sorting.contract.SortStrategy;
@@ -73,5 +75,9 @@ public class Modules {
 
     public ResultWriter<Car> carResultWriter() {
         return new CarFileWriter();
+    }
+
+    public EvenSorter<Car> evenSorter() {
+        return new EvenValueSorter<>();
     }
 }
