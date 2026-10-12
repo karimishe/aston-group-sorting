@@ -19,6 +19,13 @@ public final class MyArrayList<T> {
         size++;
     }
 
+    public void addAll(MyArrayList<T> list) {
+        int originalSize = list.size();
+        for (int i = 0; i < originalSize; i++) {
+            this.add(list.get(i));
+        }
+    }
+
     @SuppressWarnings("unchecked")
     public T get(int index) {
         checkIndex(index);
