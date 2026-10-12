@@ -16,9 +16,9 @@ import sorting.contract.SortStrategy;
 import sorting.input.ConsoleInput;
 import sorting.model.Car;
 import sorting.source.CarCounter;
-import sorting.source.FileCarSource;
-import sorting.source.ManualCarSource;
-import sorting.source.RandomCarSource;
+import sorting.source.StreamFileCarSource;
+import sorting.source.StreamManualCarSource;
+import sorting.source.StreamRandomCarSource;
 
 /**
  * Создаёт модули приложения. null в необязательной фабрике означает,
@@ -26,15 +26,15 @@ import sorting.source.RandomCarSource;
  */
 public class Modules {
     public DataSource<Car> fileSource(Path path) {
-        return new FileCarSource(path);
+        return new StreamFileCarSource(path);
     }
 
     public DataSource<Car> manualSource(ConsoleInput input) {
-        return new ManualCarSource(input);
+        return new StreamManualCarSource(input);
     }
 
     public DataSource<Car> randomSource() {
-        return new RandomCarSource();
+        return new StreamRandomCarSource();
     }
 
     public SortStrategy<Car> sortStrategy() {
