@@ -5,12 +5,20 @@ import java.util.Comparator;
 
 import sorting.algorithm.BubbleSort;
 import sorting.algorithm.InsertionSort;
+import sorting.algorithm.SelectionSort;
 import sorting.compare.CarAllFieldsComparator;
+import sorting.compare.CarModelComparator;
+import sorting.compare.CarPowerComparator;
+import sorting.compare.CarProductionYearComparator;
 import sorting.contract.DataSource;
+import sorting.contract.OccurrenceCounter;
 import sorting.contract.SortStrategy;
 import sorting.input.ConsoleInput;
 import sorting.model.Car;
+import sorting.source.CarCounter;
 import sorting.source.FileCarSource;
+import sorting.source.ManualCarSource;
+import sorting.source.RandomCarSource;
 
 /**
  * Создаёт модули приложения. null в необязательной фабрике означает,
@@ -22,11 +30,11 @@ public class Modules {
     }
 
     public DataSource<Car> manualSource(ConsoleInput input) {
-        return null;
+        return new ManualCarSource(input);
     }
 
     public DataSource<Car> randomSource() {
-        return null;
+        return new RandomCarSource();
     }
 
     public SortStrategy<Car> sortStrategy() {
@@ -34,7 +42,7 @@ public class Modules {
     }
 
     public SortStrategy<Car> selectionSort() {
-        return null;
+        return new SelectionSort<>();
     }
 
     public SortStrategy<Car> bubbleSort() {
@@ -46,14 +54,18 @@ public class Modules {
     }
 
     public Comparator<Car> powerComparator() {
-        return null;
+        return new CarPowerComparator();
     }
 
     public Comparator<Car> modelComparator() {
-        return null;
+        return new CarModelComparator();
     }
 
     public Comparator<Car> productionYearComparator() {
-        return null;
+        return new CarProductionYearComparator();
+    }
+
+    public OccurrenceCounter<Car> carCounter() {
+        return new CarCounter();
     }
 }

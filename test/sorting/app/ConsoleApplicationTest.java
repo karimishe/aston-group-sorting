@@ -8,7 +8,11 @@ import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Comparator;
+import sorting.contract.DataSource;
+import sorting.contract.SortStrategy;
 import sorting.input.ConsoleInput;
+import sorting.model.Car;
 
 public class ConsoleApplicationTest {
     private static int checks;
@@ -41,12 +45,12 @@ public class ConsoleApplicationTest {
         check(countLines(text, "Работа программы завершена.") == 1, "Выход выполняется ровно один раз");
 
         output.reset();
-        input = new ConsoleInput(new StringReader("\nтекст\n1.5\n2147483648\n-1\n5\n 0 \n"), stream);
+        input = new ConsoleInput(new StringReader("\nтекст\n1.5\n2147483648\n-1\n6\n 0 \n"), stream);
         new ConsoleApplication(input, stream, new Modules()).run();
         text = output.toString("UTF-8");
         check(countLines(text, "Меню:") == 1, "Ошибочный выбор повторяет ввод без нового меню");
         check(countLines(text, "Введите целое число.") == 4, "Нечисловой ввод и переполнение обработаны");
-        check(countLines(text, "Введите число от 0 до 4.") == 2, "Несуществующие команды обработаны");
+        check(countLines(text, "Введите число от 0 до 5.") == 2, "Несуществующие команды обработаны");
         check(countLines(text, "Работа программы завершена.") == 1, "После ошибок можно выйти");
         checkEndOfInput("");
         checkEndOfInput("ошибка\n");
@@ -63,7 +67,8 @@ public class ConsoleApplicationTest {
     }
 
     private static void checkSubmenus() throws IOException {
-        String text = run("1\n2\n1\n3\n2\n2\n2\n3\n1\n0\n2\n0\n3\n4\n0\n");
+        String text = run("1\n2\n1\n3\n2\n2\n2\n3\n1\n0\n2\n0\n3\n4\n0\n",
+                new UnavailableModules());
         check(countLines(text, "2. Вручную (не реализовано)") == 3,
                 "Ручной источник отмечен как не реализованный");
         check(countLines(text, "3. Случайные данные (не реализовано)") == 3,
@@ -243,7 +248,7 @@ public class ConsoleApplicationTest {
                     + "1\n0\n3\n4\n"
                     + "2\n2\n3\n4\n"
                     + "2\n3\n3\n4\n"
-                    + "2\n0\n3\n4\n0\n");
+                    + "2\n0\n3\n4\n0\n", new UnavailableModules());
             check(countCollections(text, "Исходная коллекция", original) == 6,
                     "Неготовые источники, алгоритмы и отмена сохраняют исходную коллекцию");
             check(countCollections(text, "Результат сортировки", sorted) == 6,
@@ -257,7 +262,7 @@ public class ConsoleApplicationTest {
                     + "2\n1\n2\n3\n4\n"
                     + "2\n1\n3\n3\n4\n"
                     + "2\n1\n4\n3\n4\n"
-                    + "2\n1\n0\n3\n4\n0\n");
+                    + "2\n1\n0\n3\n4\n0\n", new UnavailableModules());
             check(countLines(text, "1. По всем трём полям") == 5,
                     "Сравнение по трём полям доступно в каждом меню сравнения");
             check(countLines(text, "2. По мощности (не реализовано)") == 5,
@@ -313,10 +318,14 @@ public class ConsoleApplicationTest {
     }
 
     private static String run(String commands) throws IOException {
+        return run(commands, new Modules());
+    }
+
+    private static String run(String commands, Modules modules) throws IOException {
         ByteArrayOutputStream output = new ByteArrayOutputStream();
         PrintStream stream = new PrintStream(output, true, "UTF-8");
         ConsoleInput input = new ConsoleInput(new StringReader(commands), stream);
-        new ConsoleApplication(input, stream, new Modules()).run();
+        new ConsoleApplication(input, stream, modules).run();
         return output.toString("UTF-8");
     }
 
@@ -349,5 +358,42 @@ public class ConsoleApplicationTest {
             throw new AssertionError(description);
         }
         checks++;
+    }
+
+    private static final class UnavailableModules extends Modules {
+        @Override
+        public DataSource<Car> manualSource(ConsoleInput input) {
+            return null;
+        }
+
+        @Override
+        public DataSource<Car> randomSource() {
+            return null;
+        }
+
+        @Override
+        public SortStrategy<Car> selectionSort() {
+            return null;
+        }
+
+        @Override
+        public SortStrategy<Car> bubbleSort() {
+            return null;
+        }
+
+        @Override
+        public Comparator<Car> powerComparator() {
+            return null;
+        }
+
+        @Override
+        public Comparator<Car> modelComparator() {
+            return null;
+        }
+
+        @Override
+        public Comparator<Car> productionYearComparator() {
+            return null;
+        }
     }
 }
