@@ -13,6 +13,7 @@ import java.util.Objects;
 import sorting.collection.MyArrayList;
 import sorting.contract.DataSource;
 import sorting.contract.OccurrenceCounter;
+import sorting.contract.ResultWriter;
 import sorting.contract.SortStrategy;
 import sorting.input.ConsoleInput;
 import sorting.model.Car;
@@ -35,7 +36,7 @@ public final class ConsoleApplication {
 
         while (true) {
             printMenu();
-            int command = input.readInt("Ваш выбор: ", 0, 5);
+            int command = input.readInt("Ваш выбор: ", 0, 6);
             switch (command) {
                 case 1:
                     chooseSource();
@@ -51,6 +52,9 @@ public final class ConsoleApplication {
                     break;
                 case 5:
                     chooseCarForCounter();
+                    break;
+                case 6:
+                    writeCars();
                     break;
                 case 0:
                     output.println("Работа программы завершена.");
@@ -245,6 +249,37 @@ public final class ConsoleApplication {
         }
     }
 
+    private void writeCars() throws IOException {
+        if (sortedCars == null) {
+            output.println("Результата сортировки пока нет.");
+            return;
+        }
+        ResultWriter<Car> writer = modules.carResultWriter();
+        if (writer == null) {
+            output.println("Запись результата в файл пока не реализована.");
+            return;
+        }
+        String pathText = input.readLine("Путь к файлу: ").trim();
+        if (pathText.isEmpty()) {
+            output.println("Путь к файлу не должен быть пустым.");
+            return;
+        }
+        Path path;
+        try {
+            path = Paths.get(pathText);
+        } catch (InvalidPathException exception) {
+            output.println("Некорректный путь к файлу.");
+            return;
+        }
+
+        try {
+            writer.append(sortedCars, path);
+            output.println("Автомобили сохранены в файл: " + path);
+        } catch (IOException e) {
+            output.println("Ошибка при сохранении: " + e.getMessage());
+        }
+    }
+
     private void chooseCarForCounter() throws IOException {
         if (cars == null) {
             output.println("Исходная коллекция пока не загружена.");
@@ -282,6 +317,7 @@ public final class ConsoleApplication {
         output.println("3. Показать исходную коллекцию");
         output.println("4. Показать результат сортировки");
         output.println("5. Подсчитать автомобили");
+        output.println("6. Выгрузить результат сортировки в файл");
         output.println("0. Выход");
     }
 }

@@ -12,9 +12,11 @@ import sorting.compare.CarPowerComparator;
 import sorting.compare.CarProductionYearComparator;
 import sorting.contract.DataSource;
 import sorting.contract.OccurrenceCounter;
+import sorting.contract.ResultWriter;
 import sorting.contract.SortStrategy;
 import sorting.input.ConsoleInput;
 import sorting.model.Car;
+import sorting.output.CarFileWriter;
 import sorting.source.CarCounter;
 import sorting.source.StreamFileCarSource;
 import sorting.source.StreamManualCarSource;
@@ -67,5 +69,9 @@ public class Modules {
 
     public OccurrenceCounter<Car> carCounter() {
         return new CarCounter();
+    }
+
+    public ResultWriter<Car> carResultWriter() {
+        return new CarFileWriter();
     }
 }
