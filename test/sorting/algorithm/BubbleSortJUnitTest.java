@@ -125,6 +125,14 @@ class BubbleSortJUnitTest {
         assertThrows(NullPointerException.class, () -> strategy.sort(null, Integer::compare));
     }
 
+    @Test
+    void rejectsNullComparatorForEmptySingleAndMultipleElements() {
+        SortStrategy<Integer> strategy = new BubbleSort<>();
+
+        assertThrows(NullPointerException.class, () -> strategy.sort(numbers(), null));
+        assertThrows(NullPointerException.class, () -> strategy.sort(numbers(1), null));
+        assertThrows(NullPointerException.class, () -> strategy.sort(numbers(2, 1), null));
+    }
 
     // ---------- Вспомогательные методы ----------
 

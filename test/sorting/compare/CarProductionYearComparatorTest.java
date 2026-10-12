@@ -57,6 +57,15 @@ class CarProductionYearComparatorTest {
                 "Ожидалось исключение NullPointerException, т.к. оба элемента переданы как null");
     }
 
+    @Test
+    void equalYearsIgnorePowerAndModel() {
+        Car first = new Car.Builder().power(100).model("Audi").productionYear(2020).build();
+        Car second = new Car.Builder().power(200).model("Volvo").productionYear(2020).build();
+
+        assertEquals(0, COMPARATOR.compare(first, second));
+        assertEquals(0, COMPARATOR.compare(second, first));
+    }
+
     private static Car makeCar(int year) {
         return new Car.Builder()
                 .power(150)

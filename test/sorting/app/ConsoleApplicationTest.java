@@ -1,5 +1,10 @@
 package sorting.app;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import java.io.ByteArrayOutputStream;
 import java.io.EOFException;
 import java.io.IOException;
@@ -9,296 +14,343 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Comparator;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import sorting.contract.DataSource;
 import sorting.contract.SortStrategy;
 import sorting.input.ConsoleInput;
 import sorting.model.Car;
 
-public class ConsoleApplicationTest {
-    private static int checks;
+class ConsoleApplicationTest {
+    private static final String[] ORIGINAL = {
+        "150;Kia;2022", "200;Audi;2010", "150;Audi;2022",
+        "100;Volvo;2022", "150;Kia;2018", "150;Kia;2018"
+    };
+    private static final String[] SORTED = {
+        "100;Volvo;2022", "150;Audi;2022", "150;Kia;2018",
+        "150;Kia;2018", "150;Kia;2022", "200;Audi;2010"
+    };
 
-    public static void main(String[] args) throws IOException {
+    @TempDir
+    Path directory;
+
+    private Path cars;
+    private Path replacement;
+    private Path invalid;
+
+    @BeforeEach
+    void setUpPaths() {
+        cars = directory.resolve("cars.txt");
+        replacement = directory.resolve("replacement.txt");
+        invalid = directory.resolve("invalid.txt");
+    }
+
+    @Test
+    void exitsWithoutReadingFurtherInputOrClosingReader() throws IOException {
         ByteArrayOutputStream output = new ByteArrayOutputStream();
         PrintStream stream = new PrintStream(output, true, "UTF-8");
         ConsoleInput input = new ConsoleInput(new StringReader("0\n1\n"), stream);
         new ConsoleApplication(input, stream, new Modules()).run();
         String text = output.toString("UTF-8");
-        check(text.startsWith("Приложение сортировки автомобилей"), "Показано название программы");
-        check(countLines(text, "Меню:") == 1, "Перед немедленным выходом меню показано один раз");
-        check(text.endsWith("Работа программы завершена." + System.lineSeparator()),
+        assertTrue(text.startsWith("Приложение сортировки автомобилей"), "Показано название программы");
+        assertEquals(1, countLines(text, "Меню:"), "Перед немедленным выходом меню показано один раз");
+        assertTrue(text.endsWith("Работа программы завершена." + System.lineSeparator()),
                 "Ноль завершает программу с сообщением");
-        check("1".equals(input.readLine("")), "После выхода ввод не читается и Reader не закрывается");
-
-        output.reset();
-        input = new ConsoleInput(new StringReader("2\n1\n3\n4\n0\n"), stream);
-        new ConsoleApplication(input, stream, new Modules()).run();
-        text = output.toString("UTF-8");
-        check(countLines(text, "Меню:") == 4, "После каждой команды можно выбрать следующую");
-        check(countLines(text, "Сначала загрузите автомобили для сортировки.") == 1,
-                "Сортировка без данных предлагает сначала загрузить коллекцию");
-        check(!text.contains("Способ сравнения:"),
-                "До загрузки данных приложение не запрашивает способ сравнения");
-        check(countLines(text, "Исходная коллекция пока не загружена.") == 1,
-                "До загрузки отсутствует исходная коллекция");
-        check(countLines(text, "Результата сортировки пока нет.") == 1,
-                "До сортировки отсутствует результат");
-        check(countLines(text, "Работа программы завершена.") == 1, "Выход выполняется ровно один раз");
-
-        output.reset();
-        input = new ConsoleInput(new StringReader("\nтекст\n1.5\n2147483648\n-1\n8\n 0 \n"), stream);
-        new ConsoleApplication(input, stream, new Modules()).run();
-        text = output.toString("UTF-8");
-        check(countLines(text, "Меню:") == 1, "Ошибочный выбор повторяет ввод без нового меню");
-        check(countLines(text, "Введите целое число.") == 4, "Нечисловой ввод и переполнение обработаны");
-        check(countLines(text, "Введите число от 0 до 7.") == 2, "Несуществующие команды обработаны");
-        check(countLines(text, "Работа программы завершена.") == 1, "После ошибок можно выйти");
-        checkEndOfInput("");
-        checkEndOfInput("ошибка\n");
-        checkEndOfInput("1\n");
-        checkEndOfInput("2\n");
-        checkEndOfInput("1\n1\n");
-        checkEndOfInput("1\n1\ncars.txt\n");
-        checkEndOfInput("1\nошибка\n");
-        checkEndOfInput("2\n4\n");
-        checkSubmenus();
-        checkFileLoading();
-        checkSorting();
-        System.out.println("Проверок пройдено: " + checks);
+        assertEquals("1", input.readLine(""), "После выхода ввод не читается и Reader не закрывается");
     }
 
-    private static void checkSubmenus() throws IOException {
+    @Test
+    void reportsMissingDataAndKeepsMainMenuRunning() throws IOException {
+        String text = run("2\n1\n3\n4\n0\n");
+        assertEquals(4, countLines(text, "Меню:"), "После каждой команды можно выбрать следующую");
+        assertEquals(1, countLines(text, "Сначала загрузите автомобили для сортировки."),
+                "Сортировка без данных предлагает сначала загрузить коллекцию");
+        assertFalse(text.contains("Способ сравнения:"),
+                "До загрузки данных приложение не запрашивает способ сравнения");
+        assertEquals(1, countLines(text, "Исходная коллекция пока не загружена."),
+                "До загрузки отсутствует исходная коллекция");
+        assertEquals(1, countLines(text, "Результата сортировки пока нет."),
+                "До сортировки отсутствует результат");
+        assertEquals(1, countLines(text, "Работа программы завершена."), "Выход выполняется ровно один раз");
+    }
+
+    @Test
+    void retriesInvalidMainMenuInput() throws IOException {
+        String text = run("\nтекст\n1.5\n2147483648\n-1\n8\n 0 \n");
+        assertEquals(1, countLines(text, "Меню:"), "Ошибочный выбор повторяет ввод без нового меню");
+        assertEquals(4, countLines(text, "Введите целое число."), "Нечисловой ввод и переполнение обработаны");
+        assertEquals(2, countLines(text, "Введите число от 0 до 7."), "Несуществующие команды обработаны");
+        assertEquals(1, countLines(text, "Работа программы завершена."), "После ошибок можно выйти");
+    }
+
+    @Test
+    void propagatesEndOfInputAtMainAndSubmenuPrompts() throws IOException {
+        assertEndOfInput("");
+        assertEndOfInput("ошибка\n");
+        assertEndOfInput("1\n");
+        assertEndOfInput("2\n");
+        assertEndOfInput("1\n1\n");
+        assertEndOfInput("1\n1\ncars.txt\n");
+        assertEndOfInput("1\nошибка\n");
+        assertEndOfInput("2\n4\n");
+    }
+
+    @Test
+    void unavailableModulesAndCancellationReturnToMainMenu() throws IOException {
         String text = run("1\n2\n1\n3\n2\n2\n2\n3\n1\n0\n2\n0\n3\n4\n0\n",
                 new UnavailableModules());
-        check(countLines(text, "2. Вручную (не реализовано)") == 3,
+        assertEquals(3, countLines(text, "2. Вручную (не реализовано)"),
                 "Ручной источник отмечен как не реализованный");
-        check(countLines(text, "3. Случайные данные (не реализовано)") == 3,
+        assertEquals(3, countLines(text, "3. Случайные данные (не реализовано)"),
                 "Случайный источник отмечен как не реализованный");
-        check(countLines(text, "2. Выбором (не реализовано)") == 3,
+        assertEquals(3, countLines(text, "2. Выбором (не реализовано)"),
                 "Сортировка выбором отмечена как не реализованная");
-        check(countLines(text, "3. Пузырьком (не реализовано)") == 3,
+        assertEquals(3, countLines(text, "3. Пузырьком (не реализовано)"),
                 "Пузырьковая сортировка отмечена как не реализованная");
-        check(countLines(text, "Ручной ввод пока не реализован.") == 1,
+        assertEquals(1, countLines(text, "Ручной ввод пока не реализован."),
                 "Выбор ручного ввода сообщает об отсутствии реализации");
-        check(countLines(text, "Случайное заполнение пока не реализовано.") == 1,
+        assertEquals(1, countLines(text, "Случайное заполнение пока не реализовано."),
                 "Выбор случайного источника сообщает об отсутствии реализации");
-        check(countLines(text, "Сортировка выбором пока не реализована.") == 1,
+        assertEquals(1, countLines(text, "Сортировка выбором пока не реализована."),
                 "Выбор сортировки выбором сообщает об отсутствии реализации даже без коллекции");
-        check(countLines(text, "Пузырьковая сортировка пока не реализована.") == 1,
+        assertEquals(1, countLines(text, "Пузырьковая сортировка пока не реализована."),
                 "Выбор пузырьковой сортировки сообщает об отсутствии реализации даже без коллекции");
-        check(countLines(text, "Меню:") == 9,
+        assertEquals(9, countLines(text, "Меню:"),
                 "Неготовые пункты и ноль в обоих подменю возвращают в главное меню");
-        check(!text.contains("Путь к файлу:") && !text.contains("Количество автомобилей:"),
+        assertTrue(!text.contains("Путь к файлу:") && !text.contains("Количество автомобилей:"),
                 "Неготовые источники и отмена не запрашивают путь или количество");
-        check(!text.contains("Сначала загрузите автомобили для сортировки.")
+        assertTrue(!text.contains("Сначала загрузите автомобили для сортировки.")
                 && !text.contains("Отсортировано автомобилей:"),
                 "Неготовые алгоритмы и отмена не запускают доступную сортировку");
-        check(countLines(text, "Исходная коллекция пока не загружена.") == 1,
+        assertEquals(1, countLines(text, "Исходная коллекция пока не загружена."),
                 "Неготовые источники не создают коллекцию");
-        check(countLines(text, "Результата сортировки пока нет.") == 1,
+        assertEquals(1, countLines(text, "Результата сортировки пока нет."),
                 "Неготовые алгоритмы не создают результат");
-        check(countLines(text, "Работа программы завершена.") == 1,
+        assertEquals(1, countLines(text, "Работа программы завершена."),
                 "Программу завершает только ноль в главном меню");
+    }
 
-        text = run("1\nтекст\n-1\n4\n0\n2\n1.5\n-1\n4\n0\n0\n");
-        check(countLines(text, "Введите целое число.") == 2,
+    @Test
+    void retriesInvalidSourceAndAlgorithmChoices() throws IOException {
+        String text = run("1\nтекст\n-1\n4\n0\n2\n1.5\n-1\n4\n0\n0\n");
+        assertEquals(2, countLines(text, "Введите целое число."),
                 "Оба подменю повторяют запрос после нецелого ввода");
-        check(countLines(text, "Введите число от 0 до 3.") == 4,
+        assertEquals(4, countLines(text, "Введите число от 0 до 3."),
                 "Оба подменю проверяют нижнюю и верхнюю границы выбора");
-        check(countLines(text, "Источник данных:") == 1
+        assertTrue(countLines(text, "Источник данных:") == 1
                 && countLines(text, "Алгоритм сортировки:") == 1,
                 "Ошибочный ввод повторяет запрос внутри текущего подменю");
-        check(countLines(text, "Меню:") == 3,
+        assertEquals(3, countLines(text, "Меню:"),
                 "Ошибочный выбор в подменю не возвращает в главное меню");
-        check(countLines(text, "Работа программы завершена.") == 1,
+        assertEquals(1, countLines(text, "Работа программы завершена."),
                 "После ошибок и возврата из подменю можно завершить программу");
     }
 
-    private static void checkFileLoading() throws IOException {
-        Path directory = Files.createTempDirectory("car-menu-test-");
-        Path cars = directory.resolve("cars.txt");
-        Path replacement = directory.resolve("replacement.txt");
-        Path invalid = directory.resolve("invalid.txt");
-        try {
-            Files.write(cars, ("150;Kia;2020\n100;Lada;2010\n200;Toyota;2022\n")
-                    .getBytes(StandardCharsets.UTF_8));
-            Files.write(replacement, "80;Honda;2018\n".getBytes(StandardCharsets.UTF_8));
-            Files.write(invalid, "150;Kia;2020\n-1;Lada;2010\n".getBytes(StandardCharsets.UTF_8));
-
-            String text = run("1\n1\n  " + cars + "  \n2\n3\n0\n");
-            check(countLines(text, "Загружено автомобилей: 2") == 1,
-                    "Загружается запрошенное количество, пробелы вокруг пути удаляются");
-            check(countLines(text, "Исходная коллекция (2):") == 1,
-                    "Показана длина загруженной коллекции");
-            check(countLines(text, "1. 150;Kia;2020") == 1, "Показан первый автомобиль");
-            check(countLines(text, "2. 100;Lada;2010") == 1, "Показан второй автомобиль");
-            check(countLines(text, "3. 200;Toyota;2022") == 0,
-                    "Автомобили за пределами выбранной длины не добавляются");
-            check(countLines(text, "Меню:") == 3, "После загрузки и просмотра работа продолжается");
-
-            text = run("1\n1\n" + cars + "\n2\n1\n1\n" + replacement + "\n1\n3\n0\n");
-            check(countLines(text, "Загружено автомобилей: 1") == 1,
-                    "Повторная успешная загрузка сообщается пользователю");
-            check(countLines(text, "Исходная коллекция (1):") == 1,
-                    "Новая коллекция заменяет предыдущую");
-            check(countLines(text, "1. 80;Honda;2018") == 1, "Показаны новые данные");
-            check(countLines(text, "1. 150;Kia;2020") == 0, "Старые данные не сохраняются при замене");
-
-            text = run("1\n1\n" + cars + "\n1\n"
-                    + "1\n1\n" + invalid + "\n1\n3\n"
-                    + "1\n1\n" + directory.resolve("missing.txt") + "\n1\n3\n"
-                    + "1\n1\ninvalid\u0000path\n3\n0\n");
-            check(countLines(text, "Загружено автомобилей: 1") == 1,
-                    "Ошибочные загрузки не выдаются за успешные");
-            check(countLines(text, "Не удалось загрузить файл: Строка 2: "
-                    + "Мощность должна быть положительным числом.") == 1,
-                    "Ошибка файла указывает причину и номер плохой строки");
-            check(countLines(text, "Исходная коллекция (1):") == 3,
-                    "После каждой ошибки сохраняется прежняя длина коллекции");
-            check(countLines(text, "1. 150;Kia;2020") == 3,
-                    "Плохая строка после выбранного количества, отсутствующий файл и плохой путь не теряют данные");
-            check(countLines(text, "Некорректный путь к файлу.") == 1,
-                    "Некорректный путь обрабатывается без завершения программы");
-
-            text = run("1\n1\n" + cars + "\nтекст\n0\n-1\n2147483648\n2\n3\n0\n");
-            check(countLines(text, "Введите целое число.") == 2,
-                    "Нечисловая длина и переполнение вызывают повторный запрос");
-            check(countLines(text, "Введите число от 1 до 2147483647.") == 2,
-                    "Нулевая и отрицательная длина вызывают повторный запрос");
-            check(countLines(text, "Исходная коллекция (2):") == 1,
-                    "После ошибок длины коллекция успешно загружается");
-
-            text = run("1\n1\n   \n3\n0\n");
-            check(countLines(text, "Путь к файлу не должен быть пустым.") == 1,
-                    "Пустой путь сопровождается понятным сообщением");
-            check(countLines(text, "Исходная коллекция пока не загружена.") == 1,
-                    "После пустого пути выполняется следующая команда меню без запроса длины");
-        } finally {
-            Files.deleteIfExists(invalid);
-            Files.deleteIfExists(replacement);
-            Files.deleteIfExists(cars);
-            Files.deleteIfExists(directory);
-        }
+    @Test
+    void loadsRequestedNumberOfCarsAndTrimsPath() throws IOException {
+        createLoadingFiles();
+        String text = run("1\n1\n  " + cars + "  \n2\n3\n0\n");
+        assertEquals(1, countLines(text, "Загружено автомобилей: 2"),
+                "Загружается запрошенное количество, пробелы вокруг пути удаляются");
+        assertEquals(1, countLines(text, "Исходная коллекция (2):"),
+                "Показана длина загруженной коллекции");
+        assertEquals(1, countLines(text, "1. 150;Kia;2020"), "Показан первый автомобиль");
+        assertEquals(1, countLines(text, "2. 100;Lada;2010"), "Показан второй автомобиль");
+        assertEquals(0, countLines(text, "3. 200;Toyota;2022"),
+                "Автомобили за пределами выбранной длины не добавляются");
+        assertEquals(3, countLines(text, "Меню:"), "После загрузки и просмотра работа продолжается");
     }
 
-    private static void checkSorting() throws IOException {
-        Path directory = Files.createTempDirectory("car-sort-menu-test-");
-        Path cars = directory.resolve("cars.txt");
-        Path replacement = directory.resolve("replacement.txt");
-        Path invalid = directory.resolve("invalid.txt");
-        String[] original = {
-            "150;Kia;2022", "200;Audi;2010", "150;Audi;2022",
-            "100;Volvo;2022", "150;Kia;2018", "150;Kia;2018"
-        };
-        String[] sorted = {
-            "100;Volvo;2022", "150;Audi;2022", "150;Kia;2018",
-            "150;Kia;2018", "150;Kia;2022", "200;Audi;2010"
-        };
-        try {
-            Files.write(cars, String.join("\n", original).getBytes(StandardCharsets.UTF_8));
-            Files.write(replacement, "80;Honda;2018\n".getBytes(StandardCharsets.UTF_8));
-            Files.write(invalid, "150;Kia;2020\n-1;Lada;2010\n".getBytes(StandardCharsets.UTF_8));
+    @Test
+    void successfulLoadReplacesOriginalCollection() throws IOException {
+        createLoadingFiles();
+        String text = run("1\n1\n" + cars + "\n2\n1\n1\n" + replacement + "\n1\n3\n0\n");
+        assertEquals(1, countLines(text, "Загружено автомобилей: 1"),
+                "Повторная успешная загрузка сообщается пользователю");
+        assertEquals(1, countLines(text, "Исходная коллекция (1):"),
+                "Новая коллекция заменяет предыдущую");
+        assertEquals(1, countLines(text, "1. 80;Honda;2018"), "Показаны новые данные");
+        assertEquals(0, countLines(text, "1. 150;Kia;2020"), "Старые данные не сохраняются при замене");
+    }
 
-            String text = run("1\n1\n" + cars + "\n6\n2\n1\n1\n4\n3\n2\n1\n1\n4\n0\n");
-            check(countLines(text, "Отсортировано автомобилей: 6") == 2,
-                    "Одну коллекцию можно сортировать повторно");
-            check(countCollections(text, "Результат сортировки", sorted) == 2,
-                    "Обе сортировки учитывают мощность, модель и год и сохраняют повторяющиеся автомобили");
-            check(countCollections(text, "Исходная коллекция", original) == 1,
-                    "Сортировка не меняет исходный порядок автомобилей");
-            check(countLines(text, "Меню:") == 7, "После сортировки и просмотра меню продолжает работать");
+    @Test
+    void failedLoadsPreserveOriginalCollection() throws IOException {
+        createLoadingFiles();
+        String text = run("1\n1\n" + cars + "\n1\n"
+                + "1\n1\n" + invalid + "\n1\n3\n"
+                + "1\n1\n" + directory.resolve("missing.txt") + "\n1\n3\n"
+                + "1\n1\ninvalid\u0000path\n3\n0\n");
+        assertEquals(1, countLines(text, "Загружено автомобилей: 1"),
+                "Ошибочные загрузки не выдаются за успешные");
+        assertEquals(1, countLines(text, "Не удалось загрузить файл: Строка 2: "
+                + "Мощность должна быть положительным числом."),
+                "Ошибка файла указывает причину и номер плохой строки");
+        assertEquals(3, countLines(text, "Исходная коллекция (1):"),
+                "После каждой ошибки сохраняется прежняя длина коллекции");
+        assertEquals(3, countLines(text, "1. 150;Kia;2020"),
+                "Плохая строка после выбранного количества, отсутствующий файл и плохой путь не теряют данные");
+        assertEquals(1, countLines(text, "Некорректный путь к файлу."),
+                "Некорректный путь обрабатывается без завершения программы");
+    }
 
-            text = run("1\n1\n" + cars + "\n6\n2\n1\n1\n1\n1\n" + replacement
-                    + "\n1\n4\n3\n2\n1\n1\n4\n0\n");
-            check(countLines(text, "Результата сортировки пока нет.") == 1,
-                    "Успешная загрузка новой коллекции сбрасывает предыдущий результат");
-            check(countCollections(text, "Результат сортировки", sorted) == 0,
-                    "После замены коллекции старый результат не показывается");
-            check(countCollections(text, "Исходная коллекция", "80;Honda;2018") == 1,
-                    "После замены показываются новые исходные данные");
-            check(countLines(text, "Отсортировано автомобилей: 1") == 1,
-                    "Сортировка использует вновь загруженную коллекцию");
-            check(countCollections(text, "Результат сортировки", "80;Honda;2018") == 1,
-                    "Коллекция из одного автомобиля успешно сортируется");
+    @Test
+    void retriesInvalidCollectionLength() throws IOException {
+        createLoadingFiles();
+        String text = run("1\n1\n" + cars + "\nтекст\n0\n-1\n2147483648\n2\n3\n0\n");
+        assertEquals(2, countLines(text, "Введите целое число."),
+                "Нечисловая длина и переполнение вызывают повторный запрос");
+        assertEquals(2, countLines(text, "Введите число от 1 до 2147483647."),
+                "Нулевая и отрицательная длина вызывают повторный запрос");
+        assertEquals(1, countLines(text, "Исходная коллекция (2):"),
+                "После ошибок длины коллекция успешно загружается");
+    }
 
-            text = run("1\n1\n" + cars + "\n6\n2\n1\n1\n"
-                    + "1\n1\n" + invalid + "\n1\n3\n4\n"
-                    + "1\n1\n" + directory.resolve("missing.txt") + "\n1\n3\n4\n"
-                    + "1\n1\n" + replacement + "\n2\n3\n4\n0\n");
-            check(countLines(text, "Загружено автомобилей: 6") == 1,
-                    "Перед ошибками загружена исходная коллекция");
-            check(countLines(text, "Не удалось загрузить файл: Строка 2: "
-                    + "Мощность должна быть положительным числом.") == 1,
-                    "Плохая строка за пределами запрошенной длины отклоняет загрузку");
-            check(countLines(text, "Не удалось загрузить файл: Файл не найден: "
-                    + directory.resolve("missing.txt")) == 1,
-                    "После сортировки отсутствие файла обрабатывается как ошибка загрузки");
-            check(countLines(text, "Не удалось загрузить файл: В файле недостаточно автомобилей: "
-                    + "требуется 2, найдено 1.") == 1,
-                    "Недостаточное количество автомобилей отклоняет загрузку");
-            check(countCollections(text, "Исходная коллекция", original) == 3,
-                    "Невалидный, отсутствующий и короткий файлы сохраняют исходную коллекцию");
-            check(countCollections(text, "Результат сортировки", sorted) == 3,
-                    "Каждая ошибочная загрузка сохраняет последний результат сортировки");
-            check(countLines(text, "Результата сортировки пока нет.") == 0,
-                    "Ошибка загрузки не сбрасывает готовый результат");
+    @Test
+    void rejectsBlankInputPath() throws IOException {
+        createLoadingFiles();
+        String text = run("1\n1\n   \n3\n0\n");
+        assertEquals(1, countLines(text, "Путь к файлу не должен быть пустым."),
+                "Пустой путь сопровождается понятным сообщением");
+        assertEquals(1, countLines(text, "Исходная коллекция пока не загружена."),
+                "После пустого пути выполняется следующая команда меню без запроса длины");
+    }
 
-            text = run("1\n1\n" + cars + "\n6\n2\n1\n1\n"
-                    + "1\n2\n3\n4\n"
-                    + "1\n3\n3\n4\n"
-                    + "1\n0\n3\n4\n"
-                    + "2\n2\n3\n4\n"
-                    + "2\n3\n3\n4\n"
-                    + "2\n0\n3\n4\n0\n", new UnavailableModules());
-            check(countCollections(text, "Исходная коллекция", original) == 6,
-                    "Неготовые источники, алгоритмы и отмена сохраняют исходную коллекцию");
-            check(countCollections(text, "Результат сортировки", sorted) == 6,
-                    "Неготовые источники, алгоритмы и отмена сохраняют последний результат");
-            check(countLines(text, "Загружено автомобилей: 6") == 1,
-                    "Неготовые пункты не выполняют повторную загрузку");
-            check(countLines(text, "Отсортировано автомобилей: 6") == 1,
-                    "Неготовые пункты не выполняют повторную сортировку");
+    @Test
+    void sortsRepeatedlyByAllFieldsWithoutChangingOriginal() throws IOException {
+        createSortingFiles();
+        String text = run("1\n1\n" + cars + "\n6\n2\n1\n1\n4\n3\n2\n1\n1\n4\n0\n");
+        assertEquals(2, countLines(text, "Отсортировано автомобилей: 6"),
+                "Одну коллекцию можно сортировать повторно");
+        assertEquals(2, countCollections(text, "Результат сортировки", SORTED),
+                "Обе сортировки учитывают мощность, модель и год и сохраняют повторяющиеся автомобили");
+        assertEquals(1, countCollections(text, "Исходная коллекция", ORIGINAL),
+                "Сортировка не меняет исходный порядок автомобилей");
+        assertEquals(7, countLines(text, "Меню:"), "После сортировки и просмотра меню продолжает работать");
+    }
 
-            text = run("1\n1\n" + cars + "\n6\n2\n1\n1\n"
-                    + "2\n1\n2\n3\n4\n"
-                    + "2\n1\n3\n3\n4\n"
-                    + "2\n1\n4\n3\n4\n"
-                    + "2\n1\n0\n3\n4\n0\n", new UnavailableModules());
-            check(countLines(text, "1. По всем трём полям") == 5,
-                    "Сравнение по трём полям доступно в каждом меню сравнения");
-            check(countLines(text, "2. По мощности (не реализовано)") == 5,
-                    "Неготовое сравнение по мощности отмечено в меню");
-            check(countLines(text, "3. По модели (не реализовано)") == 5,
-                    "Неготовое сравнение по модели отмечено в меню");
-            check(countLines(text, "4. По году выпуска (не реализовано)") == 5,
-                    "Неготовое сравнение по году отмечено в меню");
-            check(countLines(text, "Этот способ сравнения пока не реализован.") == 3,
-                    "Каждый неготовый компаратор сопровождается сообщением");
-            check(countCollections(text, "Исходная коллекция", original) == 4,
-                    "Неготовые компараторы и отмена сохраняют исходную коллекцию");
-            check(countCollections(text, "Результат сортировки", sorted) == 4,
-                    "Неготовые компараторы и отмена сохраняют результат");
-            check(countLines(text, "Отсортировано автомобилей: 6") == 1,
-                    "Неготовый компаратор не заменяется сравнением по умолчанию");
-            check(countLines(text, "Работа программы завершена.") == 1,
-                    "Ноль в выборе компаратора возвращает в главное меню");
+    @Test
+    void newLoadClearsPreviousSortingResult() throws IOException {
+        createSortingFiles();
+        String text = run("1\n1\n" + cars + "\n6\n2\n1\n1\n1\n1\n" + replacement
+                + "\n1\n4\n3\n2\n1\n1\n4\n0\n");
+        assertEquals(1, countLines(text, "Результата сортировки пока нет."),
+                "Успешная загрузка новой коллекции сбрасывает предыдущий результат");
+        assertEquals(0, countCollections(text, "Результат сортировки", SORTED),
+                "После замены коллекции старый результат не показывается");
+        assertEquals(1, countCollections(text, "Исходная коллекция", "80;Honda;2018"),
+                "После замены показываются новые исходные данные");
+        assertEquals(1, countLines(text, "Отсортировано автомобилей: 1"),
+                "Сортировка использует вновь загруженную коллекцию");
+        assertEquals(1, countCollections(text, "Результат сортировки", "80;Honda;2018"),
+                "Коллекция из одного автомобиля успешно сортируется");
+    }
 
-            text = run("1\n1\n" + cars + "\n6\n2\n1\nтекст\n-1\n5\n1\n4\n0\n");
-            check(countLines(text, "Введите целое число.") == 1,
-                    "Выбор компаратора повторяется после нечислового ввода");
-            check(countLines(text, "Введите число от 0 до 4.") == 2,
-                    "Выбор компаратора проверяет обе границы");
-            check(countLines(text, "Способ сравнения:") == 1,
-                    "Ошибочный ввод повторяет запрос внутри меню сравнения");
-            check(countCollections(text, "Результат сортировки", sorted) == 1,
-                    "После ошибок выбора выполняется выбранная сортировка");
-            checkEndOfInput("1\n1\n" + cars + "\n6\n2\n1\n");
-            checkEndOfInput("1\n1\n" + cars + "\n6\n2\n1\nошибка\n");
-        } finally {
-            Files.deleteIfExists(invalid);
-            Files.deleteIfExists(replacement);
-            Files.deleteIfExists(cars);
-            Files.deleteIfExists(directory);
-        }
+    @Test
+    void failedLoadsPreservePreviousSortingResult() throws IOException {
+        createSortingFiles();
+        String text = run("1\n1\n" + cars + "\n6\n2\n1\n1\n"
+                + "1\n1\n" + invalid + "\n1\n3\n4\n"
+                + "1\n1\n" + directory.resolve("missing.txt") + "\n1\n3\n4\n"
+                + "1\n1\n" + replacement + "\n2\n3\n4\n0\n");
+        assertEquals(1, countLines(text, "Загружено автомобилей: 6"),
+                "Перед ошибками загружена исходная коллекция");
+        assertEquals(1, countLines(text, "Не удалось загрузить файл: Строка 2: "
+                + "Мощность должна быть положительным числом."),
+                "Плохая строка за пределами запрошенной длины отклоняет загрузку");
+        assertEquals(1, countLines(text, "Не удалось загрузить файл: Файл не найден: "
+                + directory.resolve("missing.txt")),
+                "После сортировки отсутствие файла обрабатывается как ошибка загрузки");
+        assertEquals(1, countLines(text, "Не удалось загрузить файл: В файле недостаточно автомобилей: "
+                + "требуется 2, найдено 1."),
+                "Недостаточное количество автомобилей отклоняет загрузку");
+        assertEquals(3, countCollections(text, "Исходная коллекция", ORIGINAL),
+                "Невалидный, отсутствующий и короткий файлы сохраняют исходную коллекцию");
+        assertEquals(3, countCollections(text, "Результат сортировки", SORTED),
+                "Каждая ошибочная загрузка сохраняет последний результат сортировки");
+        assertEquals(0, countLines(text, "Результата сортировки пока нет."),
+                "Ошибка загрузки не сбрасывает готовый результат");
+    }
+
+    @Test
+    void unavailableSourcesAndAlgorithmsPreserveBothCollections() throws IOException {
+        createSortingFiles();
+        String text = run("1\n1\n" + cars + "\n6\n2\n1\n1\n"
+                + "1\n2\n3\n4\n"
+                + "1\n3\n3\n4\n"
+                + "1\n0\n3\n4\n"
+                + "2\n2\n3\n4\n"
+                + "2\n3\n3\n4\n"
+                + "2\n0\n3\n4\n0\n", new UnavailableModules());
+        assertEquals(6, countCollections(text, "Исходная коллекция", ORIGINAL),
+                "Неготовые источники, алгоритмы и отмена сохраняют исходную коллекцию");
+        assertEquals(6, countCollections(text, "Результат сортировки", SORTED),
+                "Неготовые источники, алгоритмы и отмена сохраняют последний результат");
+        assertEquals(1, countLines(text, "Загружено автомобилей: 6"),
+                "Неготовые пункты не выполняют повторную загрузку");
+        assertEquals(1, countLines(text, "Отсортировано автомобилей: 6"),
+                "Неготовые пункты не выполняют повторную сортировку");
+    }
+
+    @Test
+    void unavailableComparatorsAndCancellationPreserveBothCollections() throws IOException {
+        createSortingFiles();
+        String text = run("1\n1\n" + cars + "\n6\n2\n1\n1\n"
+                + "2\n1\n2\n3\n4\n"
+                + "2\n1\n3\n3\n4\n"
+                + "2\n1\n4\n3\n4\n"
+                + "2\n1\n0\n3\n4\n0\n", new UnavailableModules());
+        assertEquals(5, countLines(text, "1. По всем трём полям"),
+                "Сравнение по трём полям доступно в каждом меню сравнения");
+        assertEquals(5, countLines(text, "2. По мощности (не реализовано)"),
+                "Неготовое сравнение по мощности отмечено в меню");
+        assertEquals(5, countLines(text, "3. По модели (не реализовано)"),
+                "Неготовое сравнение по модели отмечено в меню");
+        assertEquals(5, countLines(text, "4. По году выпуска (не реализовано)"),
+                "Неготовое сравнение по году отмечено в меню");
+        assertEquals(3, countLines(text, "Этот способ сравнения пока не реализован."),
+                "Каждый неготовый компаратор сопровождается сообщением");
+        assertEquals(4, countCollections(text, "Исходная коллекция", ORIGINAL),
+                "Неготовые компараторы и отмена сохраняют исходную коллекцию");
+        assertEquals(4, countCollections(text, "Результат сортировки", SORTED),
+                "Неготовые компараторы и отмена сохраняют результат");
+        assertEquals(1, countLines(text, "Отсортировано автомобилей: 6"),
+                "Неготовый компаратор не заменяется сравнением по умолчанию");
+        assertEquals(1, countLines(text, "Работа программы завершена."),
+                "Ноль в выборе компаратора возвращает в главное меню");
+    }
+
+    @Test
+    void retriesInvalidComparatorChoice() throws IOException {
+        createSortingFiles();
+        String text = run("1\n1\n" + cars + "\n6\n2\n1\nтекст\n-1\n5\n1\n4\n0\n");
+        assertEquals(1, countLines(text, "Введите целое число."),
+                "Выбор компаратора повторяется после нечислового ввода");
+        assertEquals(2, countLines(text, "Введите число от 0 до 4."),
+                "Выбор компаратора проверяет обе границы");
+        assertEquals(1, countLines(text, "Способ сравнения:"),
+                "Ошибочный ввод повторяет запрос внутри меню сравнения");
+        assertEquals(1, countCollections(text, "Результат сортировки", SORTED),
+                "После ошибок выбора выполняется выбранная сортировка");
+    }
+
+    @Test
+    void propagatesEndOfInputWhileChoosingComparator() throws IOException {
+        createSortingFiles();
+        assertEndOfInput("1\n1\n" + cars + "\n6\n2\n1\n");
+        assertEndOfInput("1\n1\n" + cars + "\n6\n2\n1\nошибка\n");
+    }
+
+    private void createLoadingFiles() throws IOException {
+        Files.write(cars, ("150;Kia;2020\n100;Lada;2010\n200;Toyota;2022\n")
+                .getBytes(StandardCharsets.UTF_8));
+        Files.write(replacement, "80;Honda;2018\n".getBytes(StandardCharsets.UTF_8));
+        Files.write(invalid, "150;Kia;2020\n-1;Lada;2010\n".getBytes(StandardCharsets.UTF_8));
+    }
+
+    private void createSortingFiles() throws IOException {
+        createLoadingFiles();
+        Files.write(cars, String.join("\n", ORIGINAL).getBytes(StandardCharsets.UTF_8));
     }
 
     private static int countCollections(String text, String title, String... records) {
@@ -329,17 +381,14 @@ public class ConsoleApplicationTest {
         return output.toString("UTF-8");
     }
 
-    private static void checkEndOfInput(String value) throws IOException {
+    private static void assertEndOfInput(String value) throws IOException {
         ByteArrayOutputStream output = new ByteArrayOutputStream();
         PrintStream stream = new PrintStream(output, true, "UTF-8");
         ConsoleInput input = new ConsoleInput(new StringReader(value), stream);
-        try {
-            new ConsoleApplication(input, stream, new Modules()).run();
-            throw new AssertionError("Ожидалась ошибка окончания ввода");
-        } catch (EOFException exception) {
-            checks++;
-        }
-        check(countLines(output.toString("UTF-8"), "Работа программы завершена.") == 0,
+        assertThrows(EOFException.class,
+                () -> new ConsoleApplication(input, stream, new Modules()).run(),
+                "Ожидалась ошибка окончания ввода");
+        assertEquals(0, countLines(output.toString("UTF-8"), "Работа программы завершена."),
                 "Окончание ввода не выдаётся за выбор выхода пользователем");
     }
 
@@ -351,13 +400,6 @@ public class ConsoleApplicationTest {
             }
         }
         return count;
-    }
-
-    private static void check(boolean condition, String description) {
-        if (!condition) {
-            throw new AssertionError(description);
-        }
-        checks++;
     }
 
     private static final class UnavailableModules extends Modules {
