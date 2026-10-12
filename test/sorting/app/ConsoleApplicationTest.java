@@ -45,12 +45,12 @@ public class ConsoleApplicationTest {
         check(countLines(text, "Работа программы завершена.") == 1, "Выход выполняется ровно один раз");
 
         output.reset();
-        input = new ConsoleInput(new StringReader("\nтекст\n1.5\n2147483648\n-1\n5\n 0 \n"), stream);
+        input = new ConsoleInput(new StringReader("\nтекст\n1.5\n2147483648\n-1\n6\n 0 \n"), stream);
         new ConsoleApplication(input, stream, new Modules()).run();
         text = output.toString("UTF-8");
         check(countLines(text, "Меню:") == 1, "Ошибочный выбор повторяет ввод без нового меню");
         check(countLines(text, "Введите целое число.") == 4, "Нечисловой ввод и переполнение обработаны");
-        check(countLines(text, "Введите число от 0 до 4.") == 2, "Несуществующие команды обработаны");
+        check(countLines(text, "Введите число от 0 до 5.") == 2, "Несуществующие команды обработаны");
         check(countLines(text, "Работа программы завершена.") == 1, "После ошибок можно выйти");
         checkEndOfInput("");
         checkEndOfInput("ошибка\n");
