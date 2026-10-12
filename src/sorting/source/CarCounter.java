@@ -20,6 +20,9 @@ public class CarCounter implements OccurrenceCounter<Car> {
         if (target == null) {
             throw new IllegalArgumentException("Автомобиль не может быть null.");
         }
+        if (Thread.interrupted()) {
+            throw new InterruptedException("Подсчёт прерван.");
+        }
 
         List<Thread> threads = new ArrayList<>();
         int[] counts = new int[threadCount];
@@ -31,16 +34,47 @@ public class CarCounter implements OccurrenceCounter<Car> {
             thread.start();
         }
 
-        for (Thread thread : threads) {
-            thread.join();
+        try {
+            for (Thread thread : threads) {
+                thread.join();
+            }
+            if (Thread.interrupted()) {
+                throw new InterruptedException("Подсчёт прерван.");
+            }
+        } catch (InterruptedException exception) {
+            stopThreads(threads);
+            throw exception;
         }
 
         return Arrays.stream(counts).sum();
     }
 
+    private void stopThreads(List<Thread> threads) {
+        for (Thread thread : threads) {
+            thread.interrupt();
+        }
+
+        boolean interruptedAgain = false;
+        for (Thread thread : threads) {
+            while (thread.isAlive()) {
+                try {
+                    thread.join();
+                } catch (InterruptedException exception) {
+                    interruptedAgain = true;
+                }
+            }
+        }
+        if (interruptedAgain) {
+            Thread.currentThread().interrupt();
+        }
+    }
+
     private int countInThread(MyArrayList<Car> items, Car target, int threadCount, int threadIndex) {
         int count = 0;
         for (int i = threadIndex; i < items.size(); i += threadCount) {
+            if (Thread.currentThread().isInterrupted()) {
+                return count;
+            }
             Car car = items.get(i);
             if (
                     car.getPower() == target.getPower() &&

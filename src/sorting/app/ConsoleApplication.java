@@ -245,7 +245,7 @@ public final class ConsoleApplication {
         }
     }
 
-    private void chooseCarForCounter() {
+    private void chooseCarForCounter() throws IOException {
         if (cars == null) {
             output.println("Исходная коллекция пока не загружена.");
             return;
@@ -266,8 +266,11 @@ public final class ConsoleApplication {
             int count = counter.count(cars, car, threadCount);
             output.println("Найдено совпадений: " + count);
 
-        } catch (IOException | InterruptedException e) {
-            output.println("Получено исключение: " + e.getMessage());
+        } catch (IllegalArgumentException exception) {
+            output.println("Некорректные данные: " + exception.getMessage());
+        } catch (InterruptedException exception) {
+            Thread.currentThread().interrupt();
+            output.println("Подсчёт прерван.");
         }
     }
 
