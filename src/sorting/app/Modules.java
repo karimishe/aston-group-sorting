@@ -6,9 +6,11 @@ import sorting.algorithm.InsertionSort;
 import sorting.compare.CarAllFieldsComparator;
 import sorting.compare.CarModelComparator;
 import sorting.contract.DataSource;
+import sorting.contract.ResultWriter;
 import sorting.contract.SortStrategy;
 import sorting.input.ConsoleInput;
 import sorting.model.Car;
+import sorting.output.CarFileWriter;
 import sorting.source.FileCarSource;
 import sorting.source.ManualCarSource;
 
@@ -55,5 +57,8 @@ public class Modules {
 
     public Comparator<Car> productionYearComparator() {
         return null;
+    }
+
+    public ResultWriter<Car> carResultWriter() {return new CarFileWriter();
     }
 }

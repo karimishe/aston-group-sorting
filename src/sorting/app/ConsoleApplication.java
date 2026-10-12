@@ -8,11 +8,15 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Comparator;
 import java.util.Objects;
+import java.util.Scanner;
+
 import sorting.collection.MyArrayList;
 import sorting.contract.DataSource;
+import sorting.contract.ResultWriter;
 import sorting.contract.SortStrategy;
 import sorting.input.ConsoleInput;
 import sorting.model.Car;
+import sorting.output.CarFileWriter;
 
 public final class ConsoleApplication {
     private final ConsoleInput input;
@@ -32,7 +36,7 @@ public final class ConsoleApplication {
 
         while (true) {
             printMenu();
-            int command = input.readInt("Ваш выбор: ", 0, 4);
+            int command = input.readInt("Ваш выбор: ", 0, 5);
             switch (command) {
                 case 1:
                     chooseSource();
@@ -45,6 +49,9 @@ public final class ConsoleApplication {
                     break;
                 case 4:
                     showSortedCars();
+                    break;
+                case 5:
+                    writeCars();
                     break;
                 case 0:
                     output.println("Работа программы завершена.");
@@ -239,6 +246,33 @@ public final class ConsoleApplication {
         }
     }
 
+    private void writeCars() throws IOException {
+        if (sortedCars == null) {
+            output.println("Результата сортировки пока нет.");
+            return;
+        }
+        String pathText = input.readLine("Путь к файлу: ").trim();
+        if (pathText.isEmpty()) {
+            output.println("Путь к файлу не должен быть пустым.");
+            return;
+        }
+        Path path;
+        try {
+            path = Paths.get(pathText);
+        } catch (InvalidPathException exception) {
+            output.println("Некорректный путь к файлу.");
+            return;
+        }
+
+        ResultWriter<Car> writer = new CarFileWriter();;
+        try {
+            writer.append(sortedCars, path);
+            output.println("Автомобили сохранены в файл: " + path);
+        } catch (IOException e) {
+            output.println("Ошибка при сохранении: " + e.getMessage());
+        }
+    }
+
     private void printMenu() {
         output.println();
         output.println("Меню:");
@@ -246,6 +280,7 @@ public final class ConsoleApplication {
         output.println("2. Отсортировать автомобили");
         output.println("3. Показать исходную коллекцию");
         output.println("4. Показать результат сортировки");
+        output.println("5. Выгрузить результат сортировки в файл");
         output.println("0. Выход");
     }
 }
