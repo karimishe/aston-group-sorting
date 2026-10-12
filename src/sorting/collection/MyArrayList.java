@@ -20,7 +20,8 @@ public final class MyArrayList<T> {
     }
 
     public void addAll(MyArrayList<T> list) {
-        for (int i = 0; i < list.size(); i++) {
+        int originalSize = list.size();
+        for (int i = 0; i < originalSize; i++) {
             this.add(list.get(i));
         }
     }
