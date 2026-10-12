@@ -6,27 +6,36 @@
 
 ## Запуск
 
-Проект использует стандартную библиотеку Java, без Maven и Gradle. Исходники совместимы с Java 8. Для команды компиляции ниже нужен JDK 9 или новее; проект проверен на Oracle JDK 25.0.4.1. Отдельный запуск на JDK 8 не проверялся.
+Приложение использует стандартную библиотеку Java, тесты — JUnit 5. Сборка настроена через Maven. В репозитории есть Maven Wrapper: скрипты `mvnw` и `mvnw.cmd` скачивают и запускают нужную версию Maven. Устанавливать Maven отдельно не требуется; для первого запуска нужен интернет.
+
+Для сборки и запуска нужен JDK 17 или новее. Maven собирает проект для Java 17 (`release=17`), даже если установлен более новый JDK. В коде используем возможности Java 17; для разработки подходят JDK 17, 21 и 25.
+
+Сборка, тесты и запуск из терминала проверены на macOS с Temurin JDK 17.0.20.1 и Oracle JDK 25.0.4.1.
 
 ### IntelliJ IDEA
 
-1. Откройте папку `aston-group-sorting` через **File → Open**.
-2. В **Project Structure → Project** выберите установленный JDK и **Language level 8**.
-3. Отметьте `src` как **Sources Root**, а `test` — как **Test Sources Root**.
+1. Откройте папку `aston-group-sorting` или файл `pom.xml` через **File → Open** и импортируйте проект как Maven.
+2. В **Project Structure → Project** выберите установленный JDK 17 или новее.
+3. Дождитесь загрузки зависимостей. IDEA определит папки `src` и `test` и уровень Java из `pom.xml`. Если проект уже был открыт, нажмите **Reload All Maven Projects** в окне Maven.
 4. Запустите метод `main` в [Main.java](src/sorting/app/Main.java).
 
-В конфигурации запуска **Working directory** должна указывать на корень проекта. Аргументы программы не нужны. Если IDEA не распознала Java-модуль, импортируйте корень проекта через **Project Structure → Modules → + → Import Module**.
+В конфигурации запуска **Working directory** должна указывать на корень проекта. Аргументы программы не нужны.
 
 ### Терминал
 
-Из корня проекта:
+Из корня проекта на macOS или Linux:
 
 ```sh
-javac --release 8 -encoding UTF-8 -d out src/sorting/*/*.java
-java -cp out sorting.app.Main
+./mvnw compile
+java -cp target/classes sorting.app.Main
 ```
 
-JDK 25 может вывести предупреждение об устаревшей целевой версии 8. Оно не мешает сборке.
+В Windows PowerShell:
+
+```powershell
+.\mvnw.cmd compile
+java -cp target/classes sorting.app.Main
+```
 
 ## Примеры данных
 
@@ -76,22 +85,23 @@ examples/cars-sort.txt
 
 ## Тесты
 
-Тесты — обычные Java-классы с методом `main`. Дополнительные библиотеки и параметр `-ea` не нужны; при неудачной проверке выбрасывается `AssertionError`.
+Все тесты запускаются одной командой из корня проекта. На macOS или Linux:
 
 ```sh
-javac --release 8 -encoding UTF-8 -d out src/sorting/*/*.java test/sorting/*/*.java
-java -cp out sorting.model.CarTest
-java -cp out sorting.collection.MyArrayListTest
-java -cp out sorting.input.ConsoleInputTest
-java -cp out sorting.app.ConsoleApplicationTest
-java -cp out sorting.app.ModuleIntegrationTest
-java -cp out sorting.source.CarLineParserTest
-java -cp out sorting.source.FileCarSourceTest
-java -cp out sorting.compare.CarAllFieldsComparatorTest
-java -cp out sorting.algorithm.InsertionSortTest
+./mvnw clean test
 ```
 
-В IDEA можно запустить `main` каждого тестового класса. Файловые тесты создают временные файлы и удаляют их после выполнения.
+В Windows PowerShell:
+
+```powershell
+.\mvnw.cmd clean test
+```
+
+Новые тесты пишем на JUnit 5: методы помечаем `@Test`, результат проверяем через `Assertions`, имена классов заканчиваем на `Test`. Пример — [CarAllFieldsComparatorTest](test/sorting/compare/CarAllFieldsComparatorTest.java). Maven найдёт такие тесты автоматически.
+
+Существующие проверки с `main` подключены через [CoreRegressionTest](test/sorting/CoreRegressionTest.java): его JUnit-тесты вызывают эти методы. Поэтому общая команда выполняет и старые, и новые проверки. Каждый сохранённый `main` можно по-прежнему запустить отдельно.
+
+В IDEA тесты запускаются кнопкой рядом с JUnit-классом или методом; весь набор — через Maven, цель `test`. Отчёты Maven сохраняются в `target/surefire-reports`. Файловые тесты создают временные файлы и удаляют их после выполнения.
 
 ## Документация для команды
 

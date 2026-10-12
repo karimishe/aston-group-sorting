@@ -6,12 +6,13 @@ import java.io.PrintStream;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.Objects;
-import java.util.Scanner;
 
 import sorting.collection.MyArrayList;
 import sorting.contract.DataSource;
+import sorting.contract.OccurrenceCounter;
 import sorting.contract.ResultWriter;
 import sorting.contract.SortStrategy;
 import sorting.input.ConsoleInput;
@@ -36,7 +37,7 @@ public final class ConsoleApplication {
 
         while (true) {
             printMenu();
-            int command = input.readInt("Ваш выбор: ", 0, 5);
+            int command = input.readInt("Ваш выбор: ", 0, 6);
             switch (command) {
                 case 1:
                     chooseSource();
@@ -51,6 +52,9 @@ public final class ConsoleApplication {
                     showSortedCars();
                     break;
                 case 5:
+                    chooseCarForCounter();
+                    break;
+                case 6:
                     writeCars();
                     break;
                 case 0:
@@ -273,6 +277,35 @@ public final class ConsoleApplication {
         }
     }
 
+    private void chooseCarForCounter() throws IOException {
+        if (cars == null) {
+            output.println("Исходная коллекция пока не загружена.");
+            return;
+        }
+
+        try {
+            int power = input.readInt("Укажите мощность автомобиля: ", 1, Integer.MAX_VALUE);
+            String model = input.readLine("Укажите модель: ");
+            int year = input.readInt("Укажите год: ", 1900, LocalDate.now().getYear());
+            int threadCount = input.readInt("Укажите кол-во потоков: ", 1, 255);
+
+            OccurrenceCounter<Car> counter = modules.carCounter();
+            Car car = new Car.Builder()
+                    .power(power)
+                    .model(model)
+                    .productionYear(year)
+                    .build();
+            int count = counter.count(cars, car, threadCount);
+            output.println("Найдено совпадений: " + count);
+
+        } catch (IllegalArgumentException exception) {
+            output.println("Некорректные данные: " + exception.getMessage());
+        } catch (InterruptedException exception) {
+            Thread.currentThread().interrupt();
+            output.println("Подсчёт прерван.");
+        }
+    }
+
     private void printMenu() {
         output.println();
         output.println("Меню:");
@@ -280,7 +313,8 @@ public final class ConsoleApplication {
         output.println("2. Отсортировать автомобили");
         output.println("3. Показать исходную коллекцию");
         output.println("4. Показать результат сортировки");
-        output.println("5. Выгрузить результат сортировки в файл");
+        output.println("5. Подсчитать автомобили");
+        output.println("6. Выгрузить результат сортировки в файл");
         output.println("0. Выход");
     }
 }
