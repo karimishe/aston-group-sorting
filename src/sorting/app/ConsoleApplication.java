@@ -17,7 +17,6 @@ import sorting.contract.ResultWriter;
 import sorting.contract.SortStrategy;
 import sorting.input.ConsoleInput;
 import sorting.model.Car;
-import sorting.output.CarFileWriter;
 
 public final class ConsoleApplication {
     private final ConsoleInput input;
@@ -255,6 +254,11 @@ public final class ConsoleApplication {
             output.println("Результата сортировки пока нет.");
             return;
         }
+        ResultWriter<Car> writer = modules.carResultWriter();
+        if (writer == null) {
+            output.println("Запись результата в файл пока не реализована.");
+            return;
+        }
         String pathText = input.readLine("Путь к файлу: ").trim();
         if (pathText.isEmpty()) {
             output.println("Путь к файлу не должен быть пустым.");
@@ -268,7 +272,6 @@ public final class ConsoleApplication {
             return;
         }
 
-        ResultWriter<Car> writer = new CarFileWriter();;
         try {
             writer.append(sortedCars, path);
             output.println("Автомобили сохранены в файл: " + path);

@@ -71,6 +71,7 @@ public class Modules {
         return new CarCounter();
     }
 
-    public ResultWriter<Car> carResultWriter() {return new CarFileWriter();
+    public ResultWriter<Car> carResultWriter() {
+        return new CarFileWriter();
     }
 }

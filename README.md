@@ -110,3 +110,4 @@ examples/cars-sort.txt
 - [Контракты модулей](docs/contracts.md)
 - [Состав каркаса](docs/scaffold.md)
 - [Задачи участников, правила Pull Request и тестов](docs/development-plan.md)
+- [Объяснение подключения модулей для защиты](docs/presentation.md)
