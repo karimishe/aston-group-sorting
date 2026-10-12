@@ -119,5 +119,6 @@ examples/cars-sort.txt
 - [Контракты модулей](docs/contracts.md)
 - [Состав каркаса](docs/scaffold.md)
 - [Задачи участников, правила Pull Request и тестов](docs/development-plan.md)
-- [Сценарий защиты до 20 минут](docs/demo.md)
+- [Подробный сценарий защиты с объяснением кода](docs/demo.md)
+- [Краткий план демонстрации и обзора кода](docs/demo-outline.md)
 - [Объяснение подключения модулей для защиты](docs/presentation.md)
