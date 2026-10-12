@@ -5,9 +5,11 @@ import java.util.Comparator;
 import sorting.algorithm.InsertionSort;
 import sorting.compare.CarAllFieldsComparator;
 import sorting.contract.DataSource;
+import sorting.contract.OccurrenceCounter;
 import sorting.contract.SortStrategy;
 import sorting.input.ConsoleInput;
 import sorting.model.Car;
+import sorting.source.CarCounter;
 import sorting.source.FileCarSource;
 
 /**
@@ -53,5 +55,9 @@ public class Modules {
 
     public Comparator<Car> productionYearComparator() {
         return null;
+    }
+
+    public OccurrenceCounter<Car> carCounter() {
+        return new CarCounter();
     }
 }
