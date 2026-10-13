@@ -35,7 +35,9 @@ class MainTest {
         Path classes = Path.of(Main.class.getProtectionDomain().getCodeSource().getLocation().toURI());
         Path output = directory.resolve("stdout.txt");
         Path error = directory.resolve("stderr.txt");
+        // Кодировка стандартного вывода может отличаться от file.encoding.
         Process process = new ProcessBuilder(java.toString(), "-Dfile.encoding=UTF-8",
+                "-Dstdout.encoding=UTF-8", "-Dstderr.encoding=UTF-8",
                 "-cp", classes.toString(), Main.class.getName())
                 .redirectOutput(output.toFile())
                 .redirectError(error.toFile())
@@ -46,8 +48,8 @@ class MainTest {
             }
             assertTrue(process.waitFor(10, TimeUnit.SECONDS), "Приложение должно завершиться");
             assertEquals(expectedExitCode, process.exitValue());
-            assertTrue(Files.readString(output).contains(expectedOutput));
-            assertEquals(expectedError, Files.readString(error).strip());
+            assertTrue(Files.readString(output, StandardCharsets.UTF_8).contains(expectedOutput));
+            assertEquals(expectedError, Files.readString(error, StandardCharsets.UTF_8).strip());
         } finally {
             if (process.isAlive()) {
                 process.destroyForcibly();
