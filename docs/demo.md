@@ -35,7 +35,7 @@
 
 **В консоли.** Запустить `Main`. Ввести `abc`, затем `99`: программа повторяет запрос. Выбрать `3`, затем `6`: пока нет исходных данных и результата для сохранения. Выбрать `1` → `0`: вернуться из выбора источника в главное меню.
 
-**В коде.** Открыть [Main.main](../src/sorting/app/Main.java), затем в [ConsoleApplication.run](../src/sorting/app/ConsoleApplication.java) показать `while (true)` и `switch`.
+**В коде.** Открыть [Main.main](../src/app/Main.java), затем в [ConsoleApplication.run](../src/app/ConsoleApplication.java) показать `while (true)` и `switch`.
 
 **Что сказать.** «Мы выбрали класс Car: мощность, модель и год выпуска. Приложение работает в цикле. Команда запускает действие, после него снова появляется меню. Неверный ввод не завершает программу. Ноль в подменю возвращает назад, а ноль в главном меню завершает работу. Сейчас данных нет — начнём с ручного ввода».
 
@@ -53,7 +53,7 @@
 
 Каждый раз повторяется запрос ошибочного поля. Второй автомобиль: `100`, `Лада`, `2018`. Выбрать `3`: видны ровно две введённые записи.
 
-**В коде.** Открыть [CarConsoleReader.readCar](../src/sorting/source/CarConsoleReader.java): запросы полей и цепочку `new Car.Builder()`. Перейти к [Car.Builder](../src/sorting/model/Car.java): объявление, метод `power`, проверки в `build` и создание `new Car(...)`. Для повторного запроса числа показать цикл в [ConsoleInput.readInt](../src/sorting/input/ConsoleInput.java).
+**В коде.** Открыть [CarConsoleReader.readCar](../src/source/CarConsoleReader.java): запросы полей и цепочку `new Car.Builder()`. Перейти к [Car.Builder](../src/model/Car.java): объявление, метод `power`, проверки в `build` и создание `new Car(...)`. Для повторного запроса числа показать цикл в [ConsoleInput.readInt](../src/input/ConsoleInput.java).
 
 **Что сказать.** «Читатель спрашивает поля одного автомобиля. ConsoleInput преобразует строку в число и проверяет диапазон; при ошибке повторяет запрос. Модель проверяется отдельно: она не должна быть пустой или содержать точку с запятой.
 
@@ -71,13 +71,13 @@
 
 **В консоли.** Выбрать `1` → `3` → `3`, затем команду `3` для просмотра. Должно быть три корректных автомобиля; конкретные значения случайные.
 
-**В коде.** Открыть [StreamRandomCarSource.load](../src/sorting/source/StreamRandomCarSource.java) и [CarGenerator.get](../src/sorting/source/CarGenerator.java). Рядом показать короткий конвейер в [StreamManualCarSource.load](../src/sorting/source/StreamManualCarSource.java). В [MyArrayList](../src/sorting/collection/MyArrayList.java) показать внутренний массив, `size`, `add` и `grow`.
+**В коде.** Открыть [StreamRandomCarSource.load](../src/source/StreamRandomCarSource.java) и [CarGenerator.get](../src/source/CarGenerator.java). Рядом показать короткий конвейер в [StreamManualCarSource.load](../src/source/StreamManualCarSource.java). В [MyArrayList](../src/collection/MyArrayList.java) показать внутренний массив, `size`, `add` и `grow`.
 
 **Что сказать.** «В generate передан генератор одного автомобиля. limit ограничивает их количество, а collect собирает результат в нашу коллекцию. Автомобили создаются при выполнении этого конвейера, а не загружаются заранее в готовый список. Генератор также использует Builder.
 
 У collect три действия: создать контейнер, добавить элемент и объединить контейнеры. Здесь обработка последовательная. В ручном источнике тот же принцип: для каждой позиции mapToObj вызывает чтение одного автомобиля, collect собирает их в список. MyArrayList хранит ссылки в обычном массиве; когда места не хватает, создаёт массив вдвое больше и переносит ссылки. Своя коллекция нужна для дополнительного задания 3*. Stream — способ обработки данных; его наличие ещё не означает многопоточность».
 
-**Для подготовки.** Ручной источник тоже использует Stream: [StreamManualCarSource.load](../src/sorting/source/StreamManualCarSource.java) берёт `IntStream.range(0, length)`, для каждого элемента вызывает чтение автомобиля через `mapToObj` и собирает результат через `collect`. Диалог идёт последовательно с общим ConsoleInput. В [StreamRandomCarSourceTest.generatedCarsHaveValidValues](../test/sorting/source/StreamRandomCarSourceTest.java) проверяются размер и допустимость случайных данных, а не заранее угаданная последовательность.
+**Для подготовки.** Ручной источник тоже использует Stream: [StreamManualCarSource.load](../src/source/StreamManualCarSource.java) берёт `IntStream.range(0, length)`, для каждого элемента вызывает чтение автомобиля через `mapToObj` и собирает результат через `collect`. Диалог идёт последовательно с общим ConsoleInput. В [StreamRandomCarSourceTest.generatedCarsHaveValidValues](../test/sorting/source/StreamRandomCarSourceTest.java) проверяются размер и допустимость случайных данных, а не заранее угаданная последовательность.
 
 **Переход.** «Для сравнения алгоритмов удобнее фиксированный набор. Загрузим его из файла и посмотрим, почему меню может работать с разными источниками».
 
@@ -85,7 +85,7 @@
 
 **В консоли.** `1` → `1` → `examples/cars-sort.txt` → `6`, затем `3`. В файле шесть автомобилей; два из них — `150;Kia;2018`.
 
-**В коде.** Показать [DataSource.load](../src/sorting/contract/DataSource.java), три метода источников в [Modules](../src/sorting/app/Modules.java) и `source.load(length)` в [ConsoleApplication.loadCars](../src/sorting/app/ConsoleApplication.java). Затем открыть [StreamFileCarSource.load](../src/sorting/source/StreamFileCarSource.java) и [CarLineParser.parse](../src/sorting/source/CarLineParser.java).
+**В коде.** Показать [DataSource.load](../src/contract/DataSource.java), три метода источников в [Modules](../src/app/Modules.java) и `source.load(length)` в [ConsoleApplication.loadCars](../src/app/ConsoleApplication.java). Затем открыть [StreamFileCarSource.load](../src/source/StreamFileCarSource.java) и [CarLineParser.parse](../src/source/CarLineParser.java).
 
 **Что сказать.** «Все источники соблюдают один контракт: load принимает длину и возвращает MyArrayList с таким количеством автомобилей. Modules создаёт нужный источник. Меню вызывает общий метод и получает одинаковый тип результата.
 
@@ -118,7 +118,7 @@
 200;Audi;2010
 ```
 
-**В коде.** Открыть [CarAllFieldsComparator.compare](../src/sorting/compare/CarAllFieldsComparator.java): проверки мощности, затем модели, затем года. В [InsertionSort.sort](../src/sorting/algorithm/InsertionSort.java) показать вызов `comparator.compare(...) > 0` и сдвиг элементов.
+**В коде.** Открыть [CarAllFieldsComparator.compare](../src/compare/CarAllFieldsComparator.java): проверки мощности, затем модели, затем года. В [InsertionSort.sort](../src/algorithm/InsertionSort.java) показать вызов `comparator.compare(...) > 0` и сдвиг элементов.
 
 **Что сказать.** «Компаратор сравнивает два автомобиля. Отрицательный результат означает, что первый должен идти раньше, положительный — позже, ноль — что выбранные признаки равны. Здесь сначала учитывается мощность. При равной мощности сравниваем модель, при одинаковой модели — год. Поэтому Audi с мощностью 150 раньше Kia, а Kia 2018 года раньше Kia 2022 года. Приоритет выбран в проекте; условие его не задаёт.
 
@@ -130,13 +130,13 @@
 
 | Команды из главного меню | Что увидим | Что открыть и сказать |
 | --- | --- | --- |
-| `2` → `2` → `2` → `4` | Мощности `100, 150, 150, 150, 150, 200` | [SelectionSort.sort](../src/sorting/algorithm/SelectionSort.java), поиск `minIndex`: «Выбором находим минимум оставшейся части и ставим на очередное место». [CarPowerComparator](../src/sorting/compare/CarPowerComparator.java): сравнивает только мощность |
-| `2` → `3` → `3` → `4` | Модели `Audi, Audi, Kia, Kia, Kia, Volvo` | [BubbleSort.sort](../src/sorting/algorithm/BubbleSort.java), обмен соседей: «Пузырьком меняем соседей, если они стоят неправильно; после прохода сокращаем область по последнему обмену». [CarModelComparator](../src/sorting/compare/CarModelComparator.java): сравнивает только модель |
-| `2` → `1` → `4` → `4` | Годы `2010, 2018, 2018, 2022, 2022, 2022` | [CarProductionYearComparator](../src/sorting/compare/CarProductionYearComparator.java): «Алгоритм снова вставками, но правило сравнения теперь другое — год» |
+| `2` → `2` → `2` → `4` | Мощности `100, 150, 150, 150, 150, 200` | [SelectionSort.sort](../src/algorithm/SelectionSort.java), поиск `minIndex`: «Выбором находим минимум оставшейся части и ставим на очередное место». [CarPowerComparator](../src/compare/CarPowerComparator.java): сравнивает только мощность |
+| `2` → `3` → `3` → `4` | Модели `Audi, Audi, Kia, Kia, Kia, Volvo` | [BubbleSort.sort](../src/algorithm/BubbleSort.java), обмен соседей: «Пузырьком меняем соседей, если они стоят неправильно; после прохода сокращаем область по последнему обмену». [CarModelComparator](../src/compare/CarModelComparator.java): сравнивает только модель |
+| `2` → `1` → `4` → `4` | Годы `2010, 2018, 2018, 2022, 2022, 2022` | [CarProductionYearComparator](../src/compare/CarProductionYearComparator.java): «Алгоритм снова вставками, но правило сравнения теперь другое — год» |
 
 При сравнении одного поля остальные поля не участвуют. В частности, равная мощность не обязывает сортировать такие автомобили ещё и по году. Модели сравниваются через `String.compareTo`, с учётом регистра.
 
-**В коде.** Показать [SortStrategy](../src/sorting/contract/SortStrategy.java) и три метода алгоритмов в [Modules](../src/sorting/app/Modules.java). В `ConsoleApplication.sortCars` показать:
+**В коде.** Показать [SortStrategy](../src/contract/SortStrategy.java) и три метода алгоритмов в [Modules](../src/app/Modules.java). В `ConsoleApplication.sortCars` показать:
 
 ```java
 MyArrayList<Car> result = cars.copy();
@@ -160,7 +160,7 @@ sortedCars = result;
 
 **В консоли.** `5` → `150` → `Kia` → `2018` → на число потоков сначала `0`, затем `3`. Результат — `Найдено совпадений: 2`.
 
-**В коде.** В [CarCounter](../src/sorting/source/CarCounter.java) показать `countInThread`, создание `Thread`, вызовы `start`, `join` и суммирование `counts`.
+**В коде.** В [CarCounter](../src/source/CarCounter.java) показать `countInThread`, создание `Thread`, вызовы `start`, `join` и суммирование `counts`.
 
 **Что сказать.** «Совпадение — равенство всех трёх полей автомобиля, а не одной мощности. Подсчёт использует исходную коллекцию и не требует сортировки.
 
@@ -188,7 +188,7 @@ start запускает поток. Каждый записывает числ�
 180;Volvo;2020
 ```
 
-**В коде.** В [EvenValueSorter.sort](../src/sorting/algorithm/EvenValueSorter.java) показать `field.applyAsInt(item) % 2`, `evenPositions`, вызов стратегии и обратную запись. В `ConsoleApplication.sortEvenCars` — передачу `Car::getPower`.
+**В коде.** В [EvenValueSorter.sort](../src/algorithm/EvenValueSorter.java) показать `field.applyAsInt(item) % 2`, `evenPositions`, вызов стратегии и обратную запись. В `ConsoleApplication.sortEvenCars` — передачу `Car::getPower`.
 
 **Что сказать.** «Чётность относится к мощности, а не к номеру места. Мы отмечаем позиции чётных автомобилей, собираем их отдельно, сортируем выбранной стратегией и возвращаем на отмеченные места. Автомобили с мощностью 151 и 131 остались вторым и четвёртым. Объекты перемещаются целиком.
 
@@ -204,7 +204,7 @@ start запускает поток. Каждый записывает числ�
 
 **В консоли.** `6` → `target/demo-result.txt`, затем ещё раз `6` и тот же путь. Открыть файл в IDEA: в новом файле должно быть **10 строк**, две копии последнего результата из пяти автомобилей.
 
-**В коде.** Показать [ResultWriter](../src/sorting/contract/ResultWriter.java), `carResultWriter()` в [Modules](../src/sorting/app/Modules.java), затем `writeCars()` в [ConsoleApplication](../src/sorting/app/ConsoleApplication.java):
+**В коде.** Показать [ResultWriter](../src/contract/ResultWriter.java), `carResultWriter()` в [Modules](../src/app/Modules.java), затем `writeCars()` в [ConsoleApplication](../src/app/ConsoleApplication.java):
 
 ```java
 ResultWriter<Car> writer = modules.carResultWriter();
@@ -216,7 +216,7 @@ ResultWriter<Car> writer = modules.carResultWriter();
 writer.append(sortedCars, path);
 ```
 
-Перейти к [CarFileWriter.appendText](../src/sorting/output/CarFileWriter.java): UTF-8, `StandardOpenOption.APPEND` и закрытие писателя в try-with-resources.
+Перейти к [CarFileWriter.appendText](../src/output/CarFileWriter.java): UTF-8, `StandardOpenOption.APPEND` и закрытие писателя в try-with-resources.
 
 **Что сказать.** «Modules — обычный класс, где собраны методы создания модулей. Здесь carResultWriter создаёт CarFileWriter. Меню получает его через интерфейс ResultWriter и вызывает append. Меню спрашивает путь и показывает сообщение, а работа с файлом находится в отдельном классе. APPEND дописывает данные, поэтому первая пятёрка записей сохранилась.
 

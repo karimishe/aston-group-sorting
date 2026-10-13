@@ -17,7 +17,7 @@
 1. Откройте папку `aston-group-sorting` или файл `pom.xml` через **File → Open** и импортируйте проект как Maven.
 2. В **Project Structure → Project** выберите установленный JDK 17 или новее.
 3. Дождитесь загрузки зависимостей. IDEA определит папки `src` и `test` и уровень Java из `pom.xml`. Если проект уже был открыт, нажмите **Reload All Maven Projects** в окне Maven.
-4. Запустите метод `main` в [Main.java](src/sorting/app/Main.java).
+4. Запустите метод `main` в [Main.java](src/app/Main.java).
 
 В конфигурации запуска **Working directory** должна указывать на корень проекта. Аргументы программы не нужны.
 

@@ -117,11 +117,11 @@
 
 | Что показать | Что объяснить |
 | --- | --- |
-| [`Car.Builder.build()`](../src/sorting/model/Car.java) и [`CarAllFieldsComparator.compare()`](../src/sorting/compare/CarAllFieldsComparator.java) | Builder создаёт корректный автомобиль. Компаратор отвечает за порядок сравнения трёх полей |
-| [`SortStrategy`](../src/sorting/contract/SortStrategy.java), [`InsertionSort.sort()`](../src/sorting/algorithm/InsertionSort.java), [`Modules`](../src/sorting/app/Modules.java) | Стратегия позволяет менять алгоритм. Алгоритм получает коллекцию и компаратор; `Modules` создаёт выбранные реализации. Меню вызывает общий контракт |
-| [`StreamFileCarSource.load()`](../src/sorting/source/StreamFileCarSource.java) и [`MyArrayList`](../src/sorting/collection/MyArrayList.java) | `Files.lines` читает строки, `map` разбирает автомобили, `collect` наполняет собственную коллекцию. Все строки проверяются, но сохраняется только запрошенное количество. Для ручного ввода и генератора тоже есть Stream-источники |
-| [`EvenValueSorter.sort()`](../src/sorting/algorithm/EvenValueSorter.java) | Собирает автомобили с чётным полем, сортирует выбранным алгоритмом и возвращает только на отмеченные места |
-| [`CarCounter.count()`](../src/sorting/source/CarCounter.java) и [`CarFileWriter.append()`](../src/sorting/output/CarFileWriter.java) | Рабочие потоки считают свои элементы, `join()` ожидает завершения, результаты складываются. Запись открывает файл с `APPEND`, сохраняя его прежнее содержимое |
+| [`Car.Builder.build()`](../src/model/Car.java) и [`CarAllFieldsComparator.compare()`](../src/compare/CarAllFieldsComparator.java) | Builder создаёт корректный автомобиль. Компаратор отвечает за порядок сравнения трёх полей |
+| [`SortStrategy`](../src/contract/SortStrategy.java), [`InsertionSort.sort()`](../src/algorithm/InsertionSort.java), [`Modules`](../src/app/Modules.java) | Стратегия позволяет менять алгоритм. Алгоритм получает коллекцию и компаратор; `Modules` создаёт выбранные реализации. Меню вызывает общий контракт |
+| [`StreamFileCarSource.load()`](../src/source/StreamFileCarSource.java) и [`MyArrayList`](../src/collection/MyArrayList.java) | `Files.lines` читает строки, `map` разбирает автомобили, `collect` наполняет собственную коллекцию. Все строки проверяются, но сохраняется только запрошенное количество. Для ручного ввода и генератора тоже есть Stream-источники |
+| [`EvenValueSorter.sort()`](../src/algorithm/EvenValueSorter.java) | Собирает автомобили с чётным полем, сортирует выбранным алгоритмом и возвращает только на отмеченные места |
+| [`CarCounter.count()`](../src/source/CarCounter.java) и [`CarFileWriter.append()`](../src/output/CarFileWriter.java) | Рабочие потоки считают свои элементы, `join()` ожидает завершения, результаты складываются. Запись открывает файл с `APPEND`, сохраняя его прежнее содержимое |
 
 Подробный вариант объяснения `Modules` — в [отдельной памятке](presentation.md). Здесь достаточно показать один метод создания модуля и место его вызова.
 

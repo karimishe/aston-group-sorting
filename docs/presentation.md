@@ -4,7 +4,7 @@
 
 ## Как устроено подключение
 
-[`Modules`](../src/sorting/app/Modules.java) — обычный класс, в котором собраны методы создания модулей приложения. Например, он выбирает реализацию записи автомобилей:
+[`Modules`](../src/app/Modules.java) — обычный класс, в котором собраны методы создания модулей приложения. Например, он выбирает реализацию записи автомобилей:
 
 ```java
 public ResultWriter<Car> carResultWriter() {
@@ -12,7 +12,7 @@ public ResultWriter<Car> carResultWriter() {
 }
 ```
 
-[`ConsoleApplication`](../src/sorting/app/ConsoleApplication.java) получает этот объект через `Modules`. Для работы с записью меню использует интерфейс [`ResultWriter<Car>`](../src/sorting/contract/ResultWriter.java), то есть общий контракт записи. Основные строки из `writeCars()`:
+[`ConsoleApplication`](../src/app/ConsoleApplication.java) получает этот объект через `Modules`. Для работы с записью меню использует интерфейс [`ResultWriter<Car>`](../src/contract/ResultWriter.java), то есть общий контракт записи. Основные строки из `writeCars()`:
 
 ```java
 ResultWriter<Car> writer = modules.carResultWriter();
